@@ -129,7 +129,7 @@ export default function Shell({ children }: { children: ReactNode }) {
             )}
           </div>
           <div className="mt-3 flex gap-1">
-            <Link href="/onboarding" className="flex-1 flex items-center justify-center gap-1.5 h-7 bg-background border border-border hover:bg-muted text-[9px] uppercase font-mono tracking-wider transition-colors rounded-sm text-foreground">
+            <Link href="/onboarding?edit=1" className="flex-1 flex items-center justify-center gap-1.5 h-7 bg-background border border-border hover:bg-muted text-[9px] uppercase font-mono tracking-wider transition-colors rounded-sm text-foreground">
               <UserCircle className="w-3 h-3" />
               Profile
             </Link>

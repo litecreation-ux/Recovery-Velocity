@@ -19,6 +19,7 @@ export default function Onboarding() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { isLoaded, isSignedIn, signOut } = useAuth();
+  const isEditingProfile = new URLSearchParams(window.location.search).get("edit") === "1";
   
   const [formData, setFormData] = useState<Partial<OnboardingProfile>>({});
 
@@ -53,6 +54,14 @@ export default function Onboarding() {
       toast({ title: "Error", description: err.message, variant: "destructive" });
     }
   });
+
+  useEffect(() => {
+    if (isEditingProfile || data?.profile?.status !== "active") return;
+    const workspaceRoute = workspaceRouteForAuthority(data?.authority ?? null);
+    if (workspaceRoute) {
+      window.location.replace(workspaceRoute);
+    }
+  }, [data?.authority, data?.profile?.status, isEditingProfile]);
 
   useEffect(() => {
     if (data?.profile) {
