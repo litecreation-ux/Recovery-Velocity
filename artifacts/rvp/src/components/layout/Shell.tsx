@@ -311,12 +311,12 @@ export default function Shell({ children }: { children: ReactNode }) {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
+      <main className="flex-1 flex min-h-0 flex-col min-w-0 overflow-hidden relative">
         <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-primary/5 via-background to-background opacity-50 z-0" />
         <div className="relative z-20 shrink-0">
           <ThreatAdvisoryStrip overview={countryRisk} isLoading={phaseLoading} isError={phaseError} />
         </div>
-        <div className="relative z-10 flex-1 flex flex-col min-w-0 h-full overflow-y-auto">
+        <div className="relative z-10 flex min-h-0 flex-1 flex-col min-w-0 overflow-y-auto overscroll-contain touch-pan-y">
           {children}
         </div>
       </main>
