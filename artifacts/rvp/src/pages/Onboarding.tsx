@@ -132,10 +132,10 @@ export default function Onboarding() {
   };
 
   return (
-    <div className="relative flex min-h-full flex-col items-center justify-start bg-background p-4 py-8">
+    <div className="relative flex min-h-full w-full shrink-0 flex-col items-center justify-start bg-background p-4 py-8">
       <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-primary/5 via-background to-background opacity-50 z-0" />
       
-      <div className="relative z-10 w-full max-w-2xl bg-card border border-border shadow-xl rounded-lg overflow-hidden">
+      <div className="relative z-10 w-full max-w-2xl shrink-0 bg-card border border-border shadow-xl rounded-lg overflow-hidden">
         <div className="p-6 md:p-8 border-b border-border bg-muted/20">
           <div className="flex items-center justify-between mb-2">
             <h1 className="text-2xl font-bold uppercase tracking-tight">Onboarding</h1>
