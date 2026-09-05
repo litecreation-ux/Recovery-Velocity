@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { useLocation } from "wouter";
 import { ShieldAlert, CheckCircle2, AlertCircle, Loader2, ArrowRight } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -17,7 +16,6 @@ import {
 } from "@/lib/onboarding-contract";
 
 export default function Onboarding() {
-  const [, setLocation] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { isLoaded, isSignedIn, signOut } = useAuth();
@@ -48,20 +46,13 @@ export default function Onboarding() {
       toast({ title: "Profile saved", description: "Your onboarding information has been updated." });
       const workspaceRoute = workspaceRouteForAuthority(data.authority);
       if (workspaceRoute) {
-        setLocation(workspaceRoute);
+        window.location.replace(workspaceRoute);
       }
     },
     onError: (err: Error) => {
       toast({ title: "Error", description: err.message, variant: "destructive" });
     }
   });
-
-  useEffect(() => {
-    const workspaceRoute = workspaceRouteForAuthority(data?.authority ?? null);
-    if (workspaceRoute) {
-      setLocation(workspaceRoute);
-    }
-  }, [data?.authority, setLocation]);
 
   useEffect(() => {
     if (data?.profile) {

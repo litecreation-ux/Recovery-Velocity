@@ -46,8 +46,11 @@ export default function Shell({ children }: { children: ReactNode }) {
   const [location] = useLocation();
   const { signOut } = useClerk();
   const [time, setTime] = useState(new Date());
+  const { role, isAuthorityLoading } = useRole();
   // These might fail if no role, but we can safely call them
-  const { data: summary } = useGetDashboardSummary();
+  const { data: summary } = useGetDashboardSummary({
+    query: { enabled: role === 'system_admin' },
+  });
   const { selectedCountryCode, setSelectedCountryCode } = useCountry();
   const { data: countries, isLoading: countriesLoading } = useListRiskCountries({
     query: { queryKey: getListRiskCountriesQueryKey(), staleTime: 60 * 60 * 1000 },
@@ -55,7 +58,6 @@ export default function Shell({ children }: { children: ReactNode }) {
   const { data: countryRisk, isLoading: phaseLoading, isError: phaseError } = useGetCountryRiskOverview(selectedCountryCode, {
     query: { queryKey: getGetCountryRiskOverviewQueryKey(selectedCountryCode), staleTime: 5 * 60 * 1000, refetchInterval: 5 * 60 * 1000 },
   });
-  const { role, isAuthorityLoading } = useRole();
   const [opsOpen, setOpsOpen] = useState(location === '/' || (location.startsWith('/ops/') && !location.startsWith('/ops/incidents')));
   const [staffOpen, setStaffOpen] = useState(location === '/field-officer' || location.startsWith('/ops/incidents') || location === '/unified-command');
 
@@ -95,7 +97,7 @@ export default function Shell({ children }: { children: ReactNode }) {
     }
   })();
 
-  const showNetworkStatus = role && role !== 'field_officer' && role !== 'system_admin' && role !== 'private_sector_partner';
+  const showNetworkStatus = role === 'system_admin';
   const roleLabel = ROLE_OPTIONS.find(o => o.value === role)?.label;
 
   return (
