@@ -544,36 +544,41 @@ function ReportForm({ parishId }: { parishId: string }) {
     try {
       setIsUploading(true);
       let photoObjectPath = undefined;
+      let photoUploadFailed = false;
 
       // 1. Upload file if present
       if (selectedFile) {
-        const reqRes = await fetch('/api/storage/uploads/request-url', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            name: selectedFile.name,
-            size: selectedFile.size,
-            contentType: selectedFile.type,
-          }),
-        });
+        try {
+          const reqRes = await fetch('/api/storage/uploads/request-url', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              name: selectedFile.name,
+              size: selectedFile.size,
+              contentType: selectedFile.type,
+            }),
+          });
 
-        if (!reqRes.ok) {
-          throw new Error("Failed to request upload URL");
+          if (!reqRes.ok) {
+            throw new Error("Failed to request upload URL");
+          }
+
+          const { uploadURL, objectPath } = await reqRes.json();
+
+          const uploadRes = await fetch(uploadURL, {
+            method: 'PUT',
+            headers: { 'Content-Type': selectedFile.type },
+            body: selectedFile,
+          });
+
+          if (!uploadRes.ok) {
+            throw new Error("Failed to upload file to storage");
+          }
+
+          photoObjectPath = objectPath;
+        } catch {
+          photoUploadFailed = true;
         }
-
-        const { uploadURL, objectPath } = await reqRes.json();
-
-        const uploadRes = await fetch(uploadURL, {
-          method: 'PUT',
-          headers: { 'Content-Type': selectedFile.type },
-          body: selectedFile,
-        });
-
-        if (!uploadRes.ok) {
-          throw new Error("Failed to upload file to storage");
-        }
-
-        photoObjectPath = objectPath;
       }
 
       // 2. Submit report
@@ -595,7 +600,10 @@ function ReportForm({ parishId }: { parishId: string }) {
       
       toast({
         title: "Report Submitted",
-        description: "Your report has been logged and is pending review.",
+        description: photoUploadFailed
+          ? "Your report was logged, but the photo could not be attached. It is pending review."
+          : "Your report has been logged and is pending review.",
+        variant: photoUploadFailed ? "destructive" : "default",
       });
 
       queryClient.invalidateQueries({
