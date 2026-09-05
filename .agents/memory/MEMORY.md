@@ -12,3 +12,4 @@
 - [Wouter query navigation](wouter-query-navigation.md) — use window.location.search for query params; useLocation may expose only the pathname in this setup.
 - [AI mutual-aid safety boundary](ai-mutual-aid-safety.md) — Internal approval may create a requested record, but AI-suggested counterparts stay pending until separately verified.
 - [Communications delivery truth](communications-delivery-truth.md) — Offline and fallback messages remain queued/requested until a server or provider explicitly confirms delivery.
+- [Artifact Registry auth on Nix](artifact-registry-auth-nix.md) — Use short-lived access-token login with an isolated Docker config when the gcloud credential helper binary is unavailable.

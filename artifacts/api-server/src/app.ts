@@ -38,10 +38,13 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(
   clerkMiddleware((req) => ({
-    publishableKey: publishableKeyFromHost(
-      getClerkProxyHost(req) ?? "",
-      process.env.CLERK_PUBLISHABLE_KEY,
-    ),
+    publishableKey:
+      process.env.CLERK_EXTERNAL === "true"
+        ? process.env.CLERK_PUBLISHABLE_KEY
+        : publishableKeyFromHost(
+            getClerkProxyHost(req) ?? "",
+            process.env.CLERK_PUBLISHABLE_KEY,
+          ),
   })),
 );
 

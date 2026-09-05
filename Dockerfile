@@ -12,10 +12,14 @@ RUN pnpm install --frozen-lockfile
 
 # This key is public by design, but must be present when Vite compiles Clerk.
 ARG VITE_CLERK_PUBLISHABLE_KEY
+ARG VITE_CLERK_EXTERNAL=false
+ARG VITE_CLERK_PROXY_URL
 ENV NODE_ENV=production \
     BASE_PATH=/ \
     PORT=5173 \
-    VITE_CLERK_PUBLISHABLE_KEY=${VITE_CLERK_PUBLISHABLE_KEY}
+    VITE_CLERK_PUBLISHABLE_KEY=${VITE_CLERK_PUBLISHABLE_KEY} \
+    VITE_CLERK_EXTERNAL=${VITE_CLERK_EXTERNAL} \
+    VITE_CLERK_PROXY_URL=${VITE_CLERK_PROXY_URL}
 
 RUN pnpm --filter @workspace/rvp run build \
  && pnpm --filter @workspace/api-server run build \

@@ -12,6 +12,10 @@ steps:
       - build
       - --build-arg
       - VITE_CLERK_PUBLISHABLE_KEY=${_CLERK_PUBLISHABLE_KEY}
+      - --build-arg
+      - VITE_CLERK_EXTERNAL=true
+      - --build-arg
+      - VITE_CLERK_PROXY_URL=/api/__clerk
       - --tag
       - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPOSITORY}/${_SERVICE}:$SHORT_SHA
       - .
@@ -35,7 +39,7 @@ steps:
       - --min-instances=0
       - --service-account=rvp-replit@$PROJECT_ID.iam.gserviceaccount.com
       - --add-cloudsql-instances=$PROJECT_ID:${_REGION}:rvp-postgres
-      - --set-env-vars=NODE_ENV=production,RVP_APP_ORIGIN=${_APP_ORIGIN},CLOUD_SQL_CONNECTION_NAME=$PROJECT_ID:${_REGION}:rvp-postgres,DB_NAME=rvp,DB_USER=rvp_app
+      - --set-env-vars=NODE_ENV=production,RVP_APP_ORIGIN=${_APP_ORIGIN},CLOUD_SQL_CONNECTION_NAME=$PROJECT_ID:${_REGION}:rvp-postgres,DB_NAME=rvp,DB_USER=rvp_app,CLERK_EXTERNAL=true,CLERK_PROXY_ENABLED=true
       - --set-secrets=DB_PASSWORD=rvp-db-password:latest,CLERK_SECRET_KEY=rvp-clerk-secret-key:latest,CLERK_PUBLISHABLE_KEY=rvp-clerk-publishable-key:latest,SESSION_SECRET=rvp-session-secret:latest
 
 images:
