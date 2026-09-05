@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { createContext, useContext, ReactNode } from 'react';
 import { useAuth } from '@clerk/react';
 import { useQuery } from '@tanstack/react-query';
 import {
@@ -30,23 +30,14 @@ const RoleContext = createContext<RoleContextValue | null>(null);
 
 export function RoleProvider({ children }: { children: ReactNode }) {
   const { isLoaded, isSignedIn } = useAuth();
-  const [role, setRoleState] = useState<Role | null>(null);
-  const [parishId, setParishId] = useState<string | null>(null);
 
   const { data, isLoading, refetch } = useQuery<OnboardingResponse>({
     ...onboardingQueryOptions(),
     enabled: isLoaded && !!isSignedIn,
   });
 
-  useEffect(() => {
-    if (data?.authority) {
-      setRoleState(data.authority.role);
-      setParishId(data.authority.parishId);
-    } else {
-      setRoleState(null);
-      setParishId(null);
-    }
-  }, [data, isSignedIn]);
+  const role = data?.authority?.role ?? null;
+  const parishId = data?.authority?.parishId ?? null;
 
   const setRole = (nextRole: Role) => {
     console.warn("Role switching is disabled for authenticated users.");
