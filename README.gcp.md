@@ -56,12 +56,10 @@ Use an externally managed Clerk application for Google Cloud deployment;
 Replit-managed Clerk keys and its production proxy only work on Replit-hosted
 publishes. The Cloud Build configuration enables `CLERK_EXTERNAL` on the server
 and `VITE_CLERK_EXTERNAL` in the browser build so both use the external
-publishable key instead of deriving a Replit proxy host. It also routes the
-production Frontend API through the same-origin `/api/__clerk` proxy so the
-Cloud Run hostname does not require a Clerk CNAME. Add the Cloud Run hostname
-as a satellite domain in Clerk, enable Frontend API proxying for that satellite,
-and set its proxy URL to `${_APP_ORIGIN}/api/__clerk`. Also add `_APP_ORIGIN`
-to the primary domain's allowed redirect origins and configure
+publishable key instead of deriving a Replit proxy host. The production app
+uses the verified `https://rvp.jwmsystems.com` custom domain, which is a
+subdomain of the Clerk primary domain, and connects to Clerk directly. Add
+`_APP_ORIGIN` to the primary domain's allowed redirect origins and configure
 the corresponding sign-in/sign-up redirect URLs. If using the Cloud Run URL,
 include its exact HTTPS origin (no path). Optional integrations may additionally require
 `SENDGRID_FROM_EMAIL`, `INCIDENT_COMMAND_ALERT_EMAIL`, `GOOGLE_MAPS_API_KEY` or
