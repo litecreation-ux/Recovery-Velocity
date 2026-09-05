@@ -83,7 +83,7 @@ export default function Onboarding() {
 
   if (!isLoaded || isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
+      <div className="flex min-h-full items-center justify-center bg-background">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
     );
@@ -91,7 +91,7 @@ export default function Onboarding() {
 
   if (error || !data) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center bg-background text-center p-6 space-y-4">
+      <div className="flex min-h-full flex-col items-center justify-center bg-background text-center p-6 space-y-4">
         <AlertCircle className="w-12 h-12 text-destructive" />
         <h2 className="text-xl font-bold">Failed to load status</h2>
         <Button onClick={() => window.location.reload()}>Retry</Button>
@@ -101,7 +101,7 @@ export default function Onboarding() {
 
   if (!data.emailVerified) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center bg-background text-center p-6 space-y-4">
+      <div className="flex min-h-full flex-col items-center justify-center bg-background text-center p-6 space-y-4">
         <ShieldAlert className="w-12 h-12 text-amber-500" />
         <h2 className="text-xl font-bold uppercase tracking-tight">Email Verification Required</h2>
         <p className="text-muted-foreground text-sm max-w-md">
@@ -132,7 +132,7 @@ export default function Onboarding() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4 relative overflow-hidden">
+    <div className="relative flex min-h-full flex-col items-center justify-start bg-background p-4 py-8">
       <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-primary/5 via-background to-background opacity-50 z-0" />
       
       <div className="relative z-10 w-full max-w-2xl bg-card border border-border shadow-xl rounded-lg overflow-hidden">
