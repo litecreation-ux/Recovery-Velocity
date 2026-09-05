@@ -1,0 +1,57 @@
+Add ICS (Incident Command System) framework language and phase structure to the existing RVP app. Do not change any functionality — only update labels, navigation names, and terminology to match how ODPEM Jamaica and CDEMA actually operate.
+
+Navigation sidebar changes:
+
+Rename the current nav sections to ICS phase labels:
+
+"OPS Dashboard" → "COMMAND OVERVIEW"
+"Score Details" → "PREPAREDNESS PLANNING"
+"Recommendations" → "INCIDENT ACTION PLAN"
+"Incident Risk" → "OPS SECTION"
+"Task Assignments" → "LOGISTICS SECTION"
+"Incident Command" → keep as "INCIDENT COMMAND" — this is already the correct ICS term
+"Agent Monitor" → keep as "AGENT MONITOR" — this is internal/admin only
+
+Tab labels inside the OPS Improvement Workflow page:
+
+"Score Details" tab → "PREPAREDNESS SITREP"
+"Recommendations" tab → "INCIDENT ACTION PLAN"
+"Incident Risk" tab → "OPS SECTION"
+"Task Assignments" tab → "LOGISTICS SECTION"
+
+Header and section label changes:
+
+"OPS Improvement Workflow" breadcrumb at the top of each tab → "ICS WORKFLOW"
+"Recommended Actions" page title → "INCIDENT ACTION PLAN — RECOMMENDED ACTIONS"
+"Incident Risk" page title → "OPS SECTION — ACTIVE INCIDENT TRIAGE"
+"Human Review Gate" anywhere it still appears → "INCIDENT COMMAND"
+"National Coordinator" role label → "INCIDENT COMMANDER"
+"Parish Emergency Manager" role label → "OPS SECTION CHIEF"
+"Field Officer" role label → "FIELD UNIT LEADER"
+"Private Sector Partner" role label → "UNIFIED COMMAND PARTNER"
+"System Admin" role label → keep as "SYSTEM ADMIN"
+
+Triage banner change:
+
+Replace the current amber warning banner on the OPS Section screen that reads "Triage priority is an explainable queue indicator..." with a gray info bar that reads: "Active triage queue — ICS Operations Section. Priority scores are AI-generated indicators based on incident type and approval status. All actions require Incident Command authorization before execution."
+
+Add ICS phase badge to each recommendation card:
+
+Each card in the Incident Action Plan already has a phase label (Readiness, Recovery, Resilience). Map these to the ICS equivalent and show both. Readiness phase → add small secondary badge "PRE-INCIDENT PLANNING". Recovery phase → add badge "RESPONSE PHASE". Resilience phase → add badge "RECOVERY PHASE". Show the new ICS badge in gray next to the existing colored badge, small text, no visual weight.
+
+Add a CDEMA reference line to the Score Details / Preparedness SITREP page:
+
+Below the contributing factors section add a single line in muted small text: "Scoring methodology aligned with CDEMA Caribbean Disaster Management Framework and ICS National Incident Management standards."
+
+Private sector resource exchange section header change:
+
+"Community Resource Exchange" or "Resource Exchange" wherever it appears → "UNIFIED COMMAND — PRIVATE SECTOR RESOURCES"
+
+No changes needed to:
+
+All data, mock figures, parish data, historical hurricane data
+Map view
+Approve/Reject button functionality
+Dispatch and task completion flow
+Agent names or agent monitor content
+Any API endpoints

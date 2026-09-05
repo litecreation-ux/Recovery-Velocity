@@ -1,0 +1,12 @@
+{
+  "name": "RVP Public Alerts",
+  "short_name": "RVP Alerts",
+  "description": "Official Recovery Velocity Platform public alerts.",
+  "start_url": "/public/alerts",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#174D7C",
+  "icons": [
+    { "src": "/logo.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

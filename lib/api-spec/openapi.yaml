@@ -1,0 +1,2809 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: Recovery Velocity Platform API
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: parishes
+    description: Parish data
+  - name: reviews
+    description: Human review gate
+  - name: agents
+    description: Agent statuses
+  - name: audit
+    description: Audit log
+  - name: dashboard
+    description: Dashboard aggregates
+  - name: tasks
+    description: Task dispatch and completion
+  - name: resources
+    description: Community Resource Exchange
+  - name: risk
+    description: Global, source-aware resilience intelligence
+  - name: unified-command
+    description: Durable inter-agency incident coordination
+  - name: storage
+    description: Moderated citizen-report photo storage
+  - name: communications
+    description: Resilient operational communications and radio traffic
+
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  /parishes:
+    get:
+      operationId: listParishes
+      tags: [parishes]
+      summary: List all 14 parishes with readiness scores
+      responses:
+        "200":
+          description: Parish list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Parish"
+
+  /parishes/{parishId}:
+    get:
+      operationId: getParish
+      tags: [parishes]
+      summary: Get a single parish detail
+      parameters:
+        - in: path
+          name: parishId
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Parish detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ParishDetail"
+        "404":
+          description: Not found
+
+  /parishes/{parishId}/historical-events:
+    get:
+      operationId: getParishHistoricalEvents
+      tags: [parishes]
+      summary: Historical hurricane events relevant to a parish
+      parameters:
+        - in: path
+          name: parishId
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Historical events
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/HurricaneEvent"
+        "404":
+          description: Not found
+
+  /parishes/{parishId}/citizen-reports:
+    get:
+      operationId: getParishCitizenReports
+      tags: [parishes]
+      summary: Field reports from community members for a parish
+      parameters:
+        - in: path
+          name: parishId
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Citizen reports
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CitizenReport"
+        "404":
+          description: Not found
+
+    post:
+      operationId: submitCitizenReport
+      tags: [parishes]
+      summary: Submit a new citizen field report
+      parameters:
+        - in: path
+          name: parishId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CitizenReportInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CitizenReport"
+        "400":
+          description: Bad request
+
+  /storage/uploads/request-url:
+    post:
+      operationId: requestUploadUrl
+      tags: [storage]
+      summary: Request a short-lived upload URL for citizen-report photo evidence
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UploadUrlRequest"
+      responses:
+        "200":
+          description: Presigned upload URL generated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UploadUrlResponse"
+        "400":
+          description: Unsupported image metadata
+        "429":
+          description: Too many upload requests
+
+  /parishes/{parishId}/resources:
+    get:
+      operationId: getParishResources
+      tags: [parishes]
+      summary: Resource status indicators for a parish (fuel, water, medical)
+      parameters:
+        - in: path
+          name: parishId
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Resource status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ParishResources"
+        "404":
+          description: Not found
+
+  /parishes/{parishId}/infrastructure:
+    get:
+      operationId: getParishInfrastructure
+      tags: [parishes]
+      summary: List parish infrastructure references and partner-reported availability
+      parameters:
+        - in: path
+          name: parishId
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Parish infrastructure sources
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InfrastructureOverview"
+        "404":
+          description: Parish not found
+
+  /parishes/{parishId}/infrastructure/{category}:
+    get:
+      operationId: getParishInfrastructurePlaces
+      tags: [parishes]
+      summary: Load public Google place listings for a parish infrastructure category
+      parameters:
+        - in: path
+          name: parishId
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: category
+          required: true
+          schema:
+            $ref: "#/components/schemas/InfrastructureCategory"
+      responses:
+        "200":
+          description: Parish infrastructure sources with Google place listings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InfrastructureOverview"
+        "400":
+          description: Unknown infrastructure category
+        "404":
+          description: Parish not found
+
+  /parishes/{parishId}/recovery-forecast/{stormScenario}:
+    get:
+      operationId: getParishRecoveryForecast
+      tags: [parishes]
+      summary: Scenario-based recovery planning forecast for a parish
+      parameters:
+        - in: path
+          name: parishId
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: stormScenario
+          required: true
+          schema:
+            $ref: "#/components/schemas/StormScenario"
+      responses:
+        "200":
+          description: Recovery forecast
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RecoveryForecast"
+        "404":
+          description: Not found
+
+  /dashboard/summary:
+    get:
+      operationId: getDashboardSummary
+      tags: [dashboard]
+      summary: Platform-wide summary stats and readiness overview
+      responses:
+        "200":
+          description: Dashboard summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardSummary"
+
+  /risk/countries:
+    get:
+      operationId: listRiskCountries
+      tags: [risk]
+      summary: List countries supported by the global risk intelligence view
+      responses:
+        "200":
+          description: Supported countries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/RiskCountry"
+
+  /risk/countries/{countryCode}/overview:
+    get:
+      operationId: getCountryRiskOverview
+      tags: [risk]
+      summary: Get source-labelled risk, phase, and resilience context for a country
+      parameters:
+        - in: path
+          name: countryCode
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Country risk context
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CountryRiskOverview"
+        "404":
+          description: Country is not supported
+
+  /risk/countries/{countryCode}/business-continuity:
+    get:
+      operationId: getBusinessContinuity
+      tags: [risk]
+      summary: List essential service continuity updates for a country
+      parameters:
+        - in: path
+          name: countryCode
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Business continuity context
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BusinessContinuityDirectory"
+        "404":
+          description: Country is not supported
+
+  /review-items:
+    get:
+      operationId: listReviewItems
+      tags: [reviews]
+      summary: List items pending human review
+      parameters:
+        - in: query
+          name: parishId
+          required: false
+          schema:
+            type: string
+        - in: query
+          name: status
+          required: false
+          schema:
+            type: string
+            enum: [pending, approved, rejected]
+      responses:
+        "200":
+          description: Review items
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ReviewItem"
+
+  /review-items/{id}:
+    patch:
+      operationId: updateReviewItem
+      tags: [reviews]
+      summary: Approve or reject a review item
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: number
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReviewItemUpdate"
+      responses:
+        "200":
+          description: Updated review item
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReviewItem"
+        "404":
+          description: Not found
+
+  /regional-aid/assess:
+    post:
+      operationId: assessRegionalAid
+      tags: [reviews]
+      summary: Prepare an evidence-backed regional aid draft for human review
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegionalAidAssessmentInput"
+      responses:
+        "200":
+          description: No draft was created because current evidence was insufficient
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RegionalAidAssessmentResponse"
+        "201":
+          description: Pending aid draft created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RegionalAidAssessmentResponse"
+        "400":
+          description: Invalid parish
+        "403":
+          description: Operator is not authorized for this parish
+        "409":
+          description: A matching pending draft already exists
+        "502":
+          description: The AI provider returned an unusable draft
+
+  /agents:
+    get:
+      operationId: listAgents
+      tags: [agents]
+      summary: List all 7 agent statuses
+      responses:
+        "200":
+          description: Agent list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Agent"
+
+  /tasks/dispatch:
+    post:
+      operationId: dispatchTask
+      tags: [tasks]
+      summary: Coordinator dispatches an approved incident to a field officer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TaskDispatchInput"
+      responses:
+        "201":
+          description: Task created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Task"
+        "400":
+          description: Validation error
+
+  /tasks:
+    get:
+      operationId: listTasks
+      tags: [tasks]
+      summary: List all tasks, optionally filtered by officer
+      parameters:
+        - in: query
+          name: officer
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Task list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Task"
+
+  /tasks/{id}/complete:
+    post:
+      operationId: completeTask
+      tags: [tasks]
+      summary: Backward-compatible field submission that moves a task to pending verification
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TaskCompleteInput"
+      responses:
+        "200":
+          description: Task completed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Task"
+        "404":
+          description: Task not found
+
+  /tasks/{id}/start:
+    post:
+      operationId: startTask
+      tags: [tasks]
+      summary: Assigned field unit leader starts their task
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TaskActorInput"
+      responses:
+        "200":
+          description: Task started
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Task"
+        "409":
+          description: Invalid transition or actor
+
+  /tasks/{id}/submit:
+    post:
+      operationId: submitTask
+      tags: [tasks]
+      summary: Assigned field unit leader submits evidence for OPS verification
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TaskSubmissionInput"
+      responses:
+        "200":
+          description: Task submitted for verification
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Task"
+        "409":
+          description: Invalid transition or actor
+
+  /tasks/{id}/verify:
+    post:
+      operationId: verifyTask
+      tags: [tasks]
+      summary: OPS Section Chief verifies submitted evidence and completes the task
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TaskVerificationInput"
+      responses:
+        "200":
+          description: Task verified and completed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Task"
+        "409":
+          description: Invalid transition or actor
+
+  /resources/declare:
+    post:
+      operationId: declareResources
+      tags: [resources]
+      summary: Private sector organization declares available resources
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ResourceDeclarationInput"
+      responses:
+        "201":
+          description: Declaration recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResourceDeclaration"
+        "400":
+          description: Validation error
+
+  /operator-authority:
+    get:
+      operationId: getOperatorAuthority
+      tags: [resources]
+      summary: Resolve the signed-in user's server-assigned operational role and parish scope
+      responses:
+        "200":
+          description: Current operational authority
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OperatorAuthority"
+
+  /operator-invitations:
+    get:
+      operationId: listOperatorInvitations
+      tags: [resources]
+      summary: List demo Ops Section Chief invitations
+      responses:
+        "200":
+          description: Pending demo invitations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/OperatorInvitation"
+        "403":
+          description: Only the Incident Commander may view invitations
+    post:
+      operationId: createOperatorInvitation
+      tags: [resources]
+      summary: Create a demo invitation for an Ops Section Chief
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OperatorInvitationInput"
+      responses:
+        "201":
+          description: Demo invitation created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OperatorInvitation"
+        "400":
+          description: Invalid email or parish
+        "403":
+          description: Only the Incident Commander may create invitations
+        "409":
+          description: A pending invitation already exists for this email
+
+  /resources/available:
+    get:
+      operationId: listResourceDeclarations
+      tags: [resources]
+      summary: List all current resource declarations
+      responses:
+        "200":
+          description: All declarations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ResourceDeclaration"
+
+  /resources/summary:
+    get:
+      operationId: getResourceSummary
+      tags: [resources]
+      summary: Aggregated resource totals by category for coordinator panels
+      responses:
+        "200":
+          description: Resource summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResourceSummary"
+
+  /resources/operational:
+    get:
+      operationId: listResourceOperationalStatuses
+      tags: [resources]
+      summary: List declared, deployed, verified-available, and target quantities by compatible parish unit
+      parameters:
+        - in: query
+          name: parishId
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Operational resource statuses
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ResourceOperationalStatus"
+        "404":
+          description: Parish not found
+    post:
+      operationId: recordResourceOperations
+      tags: [resources]
+      summary: Record an authorized operational resource snapshot without changing partner declarations
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ResourceOperationalInput"
+      responses:
+        "201":
+          description: Operational snapshot recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResourceOperationalStatus"
+        "400":
+          description: Validation error
+        "403":
+          description: Operational role required
+
+  /audit-log:
+    get:
+      operationId: listAuditLog
+      tags: [audit]
+      summary: List audit log entries with parish context
+      parameters:
+        - in: query
+          name: parishId
+          required: false
+          schema:
+            type: string
+        - in: query
+          name: limit
+          required: false
+          schema:
+            type: number
+      responses:
+        "200":
+          description: Audit log entries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AuditEntry"
+
+  /unified-command/{workspaceId}:
+    get:
+      operationId: getUnifiedCommandWorkspace
+      tags: [unified-command]
+      summary: Get the current role-scoped Unified Command workspace
+      parameters:
+        - in: path
+          name: workspaceId
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Current workspace
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnifiedCommandWorkspace"
+        "401":
+          description: Authentication required
+        "403":
+          description: Workspace scope denied
+        "404":
+          description: Workspace not found
+    post:
+      operationId: applyUnifiedCommandAction
+      tags: [unified-command]
+      summary: Apply an authorized, audited workspace action
+      parameters:
+        - in: path
+          name: workspaceId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UnifiedCommandActionInput"
+      responses:
+        "200":
+          description: Updated workspace
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnifiedCommandWorkspace"
+        "400":
+          description: Invalid action
+        "401":
+          description: Authentication required
+        "403":
+          description: Capability or scope denied
+        "404":
+          description: Workspace or record not found
+        "409":
+          description: Workspace changed concurrently; refresh before retrying
+
+  /communications:
+    get:
+      operationId: listCommunications
+      tags: [communications]
+      summary: List operational communications in the caller's authorized scope
+      parameters:
+        - in: query
+          name: priority
+          required: false
+          schema: { type: string, enum: [emergency, urgent, operational, information] }
+        - in: query
+          name: channel
+          required: false
+          schema: { type: string, enum: [app, radio, sms] }
+        - in: query
+          name: audience
+          required: false
+          schema: { $ref: "#/components/schemas/CommunicationAudience" }
+      responses:
+        "200":
+          description: Communications
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/CommunicationMessage" }
+        "403": { description: Operational authority required }
+    post:
+      operationId: createCommunication
+      tags: [communications]
+      summary: Record a server-attributed operational communication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CommunicationMessageInput" }
+      responses:
+        "201":
+          description: Communication recorded
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CommunicationMessage" }
+        "400": { description: Invalid input }
+        "403": { description: Scope denied }
+
+  /communications/{id}/acknowledgements:
+    post:
+      operationId: acknowledgeCommunication
+      tags: [communications]
+      summary: Acknowledge a communication once per authenticated operator
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Acknowledgement recorded or previously recorded
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CommunicationAcknowledgement" }
+        "403": { description: Scope denied }
+        "404": { description: Communication not found }
+
+  /communications/public-alerts:
+    get:
+      operationId: listPublicAlerts
+      tags: [communications]
+      summary: List published unexpired public alerts without authentication
+      parameters:
+        - in: query
+          name: countryCode
+          required: true
+          schema: { type: string }
+        - in: query
+          name: parishId
+          required: false
+          schema: { type: string }
+      responses:
+        "200":
+          description: Published public alerts
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/PublicAlert" }
+
+  /communications/public-alerts/pending:
+    get:
+      operationId: listPendingPublicAlerts
+      tags: [communications]
+      summary: List scoped public alerts pending approval for authorized approvers
+      responses:
+        "200":
+          description: Pending public alerts
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/CommunicationMessage" }
+        "403": { description: Public alert approval authority required }
+
+  /communications/{id}/public-alert-review:
+    post:
+      operationId: reviewPublicAlert
+      tags: [communications]
+      summary: Approve or reject a scoped pending public alert
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/PublicAlertReviewInput" }
+      responses:
+        "200":
+          description: Public alert reviewed
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CommunicationMessage" }
+        "400": { description: Invalid public alert review }
+        "403": { description: Public alert approval authority required }
+        "404": { description: Public alert not found }
+
+  /radio-traffic:
+    get:
+      operationId: listRadioTraffic
+      tags: [communications]
+      summary: List radio traffic in the caller's authorized scope
+      parameters:
+        - in: query
+          name: priority
+          required: false
+          schema: { type: string, enum: [emergency, urgent, operational, information] }
+      responses:
+        "200":
+          description: Radio traffic
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/RadioTrafficLog" }
+        "403": { description: Operational authority required }
+    post:
+      operationId: createRadioTraffic
+      tags: [communications]
+      summary: Record authenticated radio traffic
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/RadioTrafficLogInput" }
+      responses:
+        "201":
+          description: Radio traffic recorded
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/RadioTrafficLog" }
+        "400": { description: Invalid input }
+        "403": { description: Scope denied }
+
+components:
+  schemas:
+    CommunicationMessage:
+      type: object
+      required: [id, clientId, body, priority, channel, deliveryState, audience, countryCode, parishId, senderUserId, senderName, publicStatus, expiresAt, approvedAt, approvedByName, rejectedAt, rejectedByName, rejectionReason, createdAt, updatedAt, acknowledgementCount, acknowledgedByCurrentUser]
+      properties:
+        id: { type: string }
+        clientId: { type: string }
+        body: { type: string }
+        priority: { type: string, enum: [emergency, urgent, operational, information] }
+        channel: { type: string, enum: [app, radio, sms] }
+        deliveryState: { type: string, enum: [recorded, requested, delivered] }
+        audience: { $ref: "#/components/schemas/CommunicationAudience" }
+        countryCode: { type: string }
+        parishId: { type: ["string", "null"] }
+        senderUserId: { type: string }
+        senderName: { type: string }
+        publicStatus: { type: ["string", "null"], enum: [pending_approval, published, rejected, expired, null] }
+        expiresAt: { type: ["string", "null"] }
+        approvedAt: { type: ["string", "null"] }
+        approvedByName: { type: ["string", "null"] }
+        rejectedAt: { type: ["string", "null"] }
+        rejectedByName: { type: ["string", "null"] }
+        rejectionReason: { type: ["string", "null"] }
+        createdAt: { type: string }
+        updatedAt: { type: string }
+        acknowledgementCount: { type: number }
+        acknowledgedByCurrentUser: { type: boolean }
+
+    CommunicationMessageInput:
+      type: object
+      required: [clientId, body, priority, channel, audience, countryCode]
+      properties:
+        clientId: { type: string, minLength: 1, maxLength: 120 }
+        body: { type: string, minLength: 1, maxLength: 4000 }
+        priority: { type: string, enum: [emergency, urgent, operational, information] }
+        channel: { type: string, enum: [app, radio, sms] }
+        audience: { $ref: "#/components/schemas/CommunicationAudience" }
+        countryCode: { type: string, minLength: 2, maxLength: 8 }
+        parishId: { type: string, maxLength: 120 }
+        expiresAt: { type: string }
+
+    CommunicationAudience:
+      type: string
+      enum: [authorized_scope, incident_commanders, command_team, field_teams, unified_command_partners, public]
+
+    PublicAlertReviewInput:
+      type: object
+      required: [action]
+      properties:
+        action: { type: string, enum: [approve, reject] }
+        rejectionReason: { type: string, minLength: 1, maxLength: 1000 }
+
+    PublicAlert:
+      type: object
+      required: [id, body, priority, channel, countryCode, parishId, issuedAt, expiresAt]
+      properties:
+        id: { type: string }
+        body: { type: string }
+        priority: { type: string, enum: [emergency, urgent, operational, information] }
+        channel: { type: string, enum: [app, radio, sms] }
+        countryCode: { type: string }
+        parishId: { type: ["string", "null"] }
+        issuedAt: { type: string }
+        expiresAt: { type: string }
+
+    CommunicationAcknowledgement:
+      type: object
+      required: [id, messageId, userId, acknowledgedAt]
+      properties:
+        id: { type: string }
+        messageId: { type: string }
+        userId: { type: string }
+        acknowledgedAt: { type: string }
+
+    RadioTrafficLog:
+      type: object
+      required: [id, clientId, station, direction, body, occurredAt, priority, countryCode, parishId, recorderUserId, recorderName, createdAt]
+      properties:
+        id: { type: string }
+        clientId: { type: string }
+        station: { type: string }
+        direction: { type: string, enum: [incoming, outgoing] }
+        body: { type: string }
+        occurredAt: { type: string }
+        priority: { type: string, enum: [emergency, urgent, operational, information] }
+        countryCode: { type: string }
+        parishId: { type: ["string", "null"] }
+        recorderUserId: { type: string }
+        recorderName: { type: string }
+        createdAt: { type: string }
+
+    RadioTrafficLogInput:
+      type: object
+      required: [clientId, station, direction, body, occurredAt, priority, countryCode]
+      properties:
+        clientId: { type: string, minLength: 1, maxLength: 120 }
+        station: { type: string, minLength: 1, maxLength: 160 }
+        direction: { type: string, enum: [incoming, outgoing] }
+        body: { type: string, minLength: 1, maxLength: 4000 }
+        occurredAt: { type: string }
+        priority: { type: string, enum: [emergency, urgent, operational, information] }
+        countryCode: { type: string, minLength: 2, maxLength: 8 }
+        parishId: { type: string, maxLength: 120 }
+
+    HealthStatus:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+
+    UnifiedCommandWorkspace:
+      type: object
+      required: [id, name, incidentName, countryCode, status, currentActor, capabilities, members, boundaries, objectives, mutualAid, communications, notificationChannels, aidExpirationNotificationChannelId, notificationDeliveries, externalAgencies, accessEvents, expirationWarnings, updatedAt]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        incidentName: { type: string }
+        countryCode: { type: string }
+        parishId: { type: ["string", "null"] }
+        status: { type: string, enum: [active, stood_down] }
+        currentActor: { $ref: "#/components/schemas/UnifiedCommandActor" }
+        capabilities:
+          type: array
+          items: { type: string, enum: [view, coordinate, manage_access] }
+        members:
+          type: array
+          items: { $ref: "#/components/schemas/UnifiedCommandMember" }
+        boundaries:
+          type: array
+          items: { $ref: "#/components/schemas/UnifiedCommandBoundary" }
+        objectives:
+          type: array
+          items: { $ref: "#/components/schemas/UnifiedCommandObjective" }
+        mutualAid:
+          type: array
+          items: { $ref: "#/components/schemas/UnifiedCommandAid" }
+        communications:
+          type: array
+          items: { $ref: "#/components/schemas/UnifiedCommandCommunication" }
+        notificationChannels:
+          type: array
+          description: Server-approved active command destinations available to Incident Command.
+          items: { $ref: "#/components/schemas/UnifiedCommandNotificationChannel" }
+        aidExpirationNotificationChannelId:
+          type: ["string", "null"]
+          description: The approved destination selected for advance aid-expiration warnings.
+        notificationDeliveries:
+          type: array
+          description: Delivery outcomes for advance aid-expiration warnings. Does not contain confirmation evidence.
+          items: { $ref: "#/components/schemas/UnifiedCommandNotificationDelivery" }
+        externalAgencies:
+          type: array
+          items: { $ref: "#/components/schemas/UnifiedCommandExternalAgency" }
+        accessEvents:
+          type: array
+          items: { $ref: "#/components/schemas/UnifiedCommandAccessEvent" }
+        expirationWarnings:
+          type: array
+          description: Current verified aid confirmations within the advance-warning window.
+          items: { $ref: "#/components/schemas/UnifiedCommandAidExpirationWarning" }
+        updatedAt: { type: string }
+
+    UnifiedCommandActor:
+      type: object
+      required: [name, role]
+      properties:
+        name: { type: string }
+        role: { type: string }
+        parishId: { type: ["string", "null"] }
+
+    UnifiedCommandMember:
+      type: object
+      required: [id, name, role, agency, icsFunction, contactChannel, joinedAt, status, scope]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        role: { type: string }
+        accessRole: { type: string, enum: [parish_manager, field_officer] }
+        agency: { type: string }
+        icsFunction: { type: string, enum: [Command, Operations, Planning, Logistics, Finance] }
+        contactChannel: { type: string }
+        joinedAt: { type: string }
+        status: { type: string, enum: [active, standby, offline, suspended, removed, invited] }
+        scope: { type: string }
+
+    UnifiedCommandBoundary:
+      type: object
+      required: [id, responsibleAgency, scopeType, scope, handoffState, verificationStatus, lastVerifiedAt, note]
+      properties:
+        id: { type: string }
+        responsibleAgency: { type: string }
+        scopeType: { type: string, enum: [geographic, functional] }
+        scope: { type: string }
+        handoffState: { type: string, enum: [retained, requested, in_progress, complete] }
+        verificationStatus: { type: string, enum: [verified, stale, unverified] }
+        lastVerifiedAt: { type: ["string", "null"] }
+        note: { type: string }
+
+    UnifiedCommandObjective:
+      type: object
+      required: [id, title, description, priority, status, owner, operationalPeriod, pinned, linkedTaskIds, createdAt]
+      properties:
+        id: { type: string }
+        title: { type: string }
+        description: { type: string }
+        priority: { type: string, enum: [critical, high, medium] }
+        status: { type: string, enum: [active, achieved, deferred] }
+        owner: { type: string }
+        operationalPeriod: { type: string }
+        pinned: { type: boolean }
+        linkedTaskIds:
+          type: array
+          items: { type: string }
+        createdAt: { type: string }
+
+    UnifiedCommandAid:
+      type: object
+      required: [id, requester, provider, resource, quantity, unit, destination, status, approval, eta, createdAt]
+      properties:
+        id: { type: string }
+        requester: { type: string }
+        provider: { type: string }
+        resource: { type: string }
+        quantity:
+          type: number
+          description: Quantity currently accepted for operational movement; equals the requested quantity until a partial confirmation is recorded.
+        requestedQuantity:
+          type: number
+          description: Original quantity requested before any partial counterpart acceptance.
+        unit: { type: string }
+        destination: { type: string }
+        status: { type: string, enum: [requested, committed, en_route, delivered, cancelled] }
+        approval: { type: string, enum: [pending, approved, declined] }
+        eta: { type: ["string", "null"] }
+        resourceDeclarationId: { type: ["string", "null"] }
+        planningCandidates:
+          type: array
+          description: AI-suggested counterparts that remain planning-only until separately verified.
+          items:
+            $ref: "#/components/schemas/RegionalAidCountrySuggestion"
+        confirmation:
+          oneOf:
+            - $ref: "#/components/schemas/UnifiedCommandAidConfirmation"
+            - type: "null"
+        confirmationHistory:
+          type: array
+          description: Immutable confirmation evidence revisions, including rejection and expiration records.
+          items:
+            $ref: "#/components/schemas/UnifiedCommandAidConfirmation"
+        expirationWarningSentAt:
+          type: ["string", "null"]
+          description: Server timestamp for the deduplicated advance warning for the current confirmation revision.
+        createdAt: { type: string }
+
+    UnifiedCommandAidConfirmation:
+      type: object
+      required: [reference, source, confirmedAt, provider, acceptedQuantity, status, recordedBy, recordedAt]
+      properties:
+        reference: { type: string }
+        source: { type: string }
+        confirmedAt: { type: string }
+        provider: { type: string }
+        acceptedQuantity: { type: number }
+        expiresAt: { type: ["string", "null"] }
+        status: { type: string, enum: [accepted, partial, rejected, expired] }
+        recordedBy: { type: string }
+        recordedAt: { type: string }
+
+    UnifiedCommandAidExpirationWarning:
+      type: object
+      required: [warningKey, aidId, resource, unit, provider, reference, expiresAt, remainingMs, warnedAt]
+      properties:
+        warningKey: { type: string }
+        aidId: { type: string }
+        resource: { type: string }
+        unit: { type: string }
+        provider: { type: string }
+        reference: { type: string }
+        expiresAt: { type: string }
+        remainingMs: { type: number }
+        warnedAt: { type: string }
+
+    UnifiedCommandNotificationChannel:
+      type: object
+      required: [id, label, kind, status, approved]
+      properties:
+        id: { type: string }
+        label: { type: string }
+        kind: { type: string, enum: [email] }
+        status: { type: string, enum: [active, inactive] }
+        approved: { type: boolean }
+
+    UnifiedCommandNotificationDelivery:
+      type: object
+      required: [warningKey, aidId, destinationId, status, attempts, attemptedAt, deliveredAt, providerMessageId, error]
+      properties:
+        warningKey: { type: string }
+        aidId: { type: string }
+        destinationId: { type: string }
+        status: { type: string, enum: [pending, delivered, failed, unknown] }
+        attempts: { type: number }
+        attemptedAt: { type: string }
+        deliveredAt: { type: ["string", "null"] }
+        providerMessageId: { type: ["string", "null"] }
+        error: { type: ["string", "null"] }
+
+    UnifiedCommandCommunication:
+      type: object
+      required: [id, author, agency, channel, message, timestamp, acknowledgements]
+      properties:
+        id: { type: string }
+        author: { type: string }
+        agency: { type: string }
+        channel: { type: string }
+        message: { type: string }
+        timestamp: { type: string }
+        objectiveId: { type: ["string", "null"] }
+        taskId: { type: ["string", "null"] }
+        acknowledgements:
+          type: array
+          items: { type: string }
+
+    UnifiedCommandExternalAgency:
+      type: object
+      required: [id, agency, status, capacity, needs, location, lastVerifiedAt, verificationStatus, evidenceReferences]
+      properties:
+        id: { type: string }
+        agency: { type: string }
+        status: { type: string, enum: [requested, active, standby, offline, unverified] }
+        capacity: { type: string }
+        needs: { type: string }
+        location: { type: string }
+        lastVerifiedAt: { type: ["string", "null"] }
+        verificationStatus: { type: string, enum: [verified, stale, unverified] }
+        evidenceReferences:
+          type: array
+          items: { type: string }
+
+    UnifiedCommandAccessEvent:
+      type: object
+      required: [id, action, actor, subject, timestamp, detail]
+      properties:
+        id: { type: string }
+        action: { type: string }
+        actor: { type: string }
+        subject: { type: string }
+        timestamp: { type: string }
+        detail: { type: string }
+
+    UnifiedCommandActionInput:
+      oneOf:
+        - $ref: "#/components/schemas/UnifiedCommandGeneralActionInput"
+        - $ref: "#/components/schemas/UnifiedCommandAidConfirmationActionInput"
+
+    UnifiedCommandGeneralActionInput:
+      type: object
+      required: [type]
+      properties:
+        type:
+          type: string
+          enum: [create_objective, update_objective, create_aid, update_aid, post_message, acknowledge_message, update_agency, update_boundary, invite_member, update_member, configure_aid_expiration_notifications]
+        recordId: { type: string }
+        title: { type: string }
+        description: { type: string }
+        priority: { type: string, enum: [critical, high, medium] }
+        status: { type: string }
+        owner: { type: string }
+        operationalPeriod: { type: string }
+        requester: { type: string }
+        provider: { type: string }
+        resource: { type: string }
+        quantity: { type: number }
+        unit: { type: string }
+        destination: { type: string }
+        approval: { type: string }
+        eta: { type: string }
+        message: { type: string }
+        channel: { type: string }
+        objectiveId: { type: string }
+        taskId: { type: string }
+        agency: { type: string }
+        capacity: { type: string }
+        needs: { type: string }
+        location: { type: string }
+        evidenceReference: { type: string }
+        responsibleAgency: { type: string }
+        scopeType: { type: string }
+        scope: { type: string }
+        handoffState: { type: string }
+        verificationStatus: { type: string }
+        name: { type: string }
+        role: { type: string }
+        roleTitle: { type: string }
+        email: { type: string }
+        icsFunction: { type: string }
+        contactChannel: { type: string }
+        notificationChannelId: { type: string }
+
+    UnifiedCommandAidConfirmationActionInput:
+      type: object
+      required: [type, recordId, confirmationReference, confirmationSource, confirmationTimestamp, confirmationProvider, acceptedQuantity, status]
+      properties:
+        type:
+          type: string
+          enum: [confirm_aid]
+        recordId: { type: string }
+        confirmationReference:
+          type: string
+        confirmationSource:
+          type: string
+        confirmationTimestamp:
+          type: string
+          description: Official counterpart response time; cannot be in the future.
+        confirmationProvider:
+          type: string
+        acceptedQuantity:
+          type: number
+          minimum: 0
+          description: Zero records a rejection; a partial quantity reduces the operational commitment.
+        confirmationExpiresAt: { type: string }
+        status:
+          type: string
+          enum: [requested, committed]
+
+    RiskCountry:
+      type: object
+      required: [code, name, region, hasOperationalUnits, hazards, preparednessScope]
+      properties:
+        code:
+          type: string
+        name:
+          type: string
+        region:
+          type: string
+        hasOperationalUnits:
+          type: boolean
+        hazards:
+          type: array
+          items:
+            type: string
+        preparednessScope:
+          type: string
+
+    DisasterPhaseState:
+      type: object
+      required: [phase, source, reason, decidedAt, isOverride]
+      properties:
+        phase:
+          type: string
+          enum: [preparedness, active_response, recovery, unavailable]
+        source:
+          type: string
+        reason:
+          type: string
+        decidedAt:
+          type: string
+        isOverride:
+          type: boolean
+
+    PhaseOverrideInput:
+      type: object
+      required: [phase, reason]
+      properties:
+        phase:
+          type: string
+          enum: [preparedness, active_response, recovery]
+        reason:
+          type: string
+          minLength: 1
+
+    WorldBankIndicator:
+      type: object
+      required: [code, name, factor, unit, sourceName, sourceUrl, sourceStatus]
+      properties:
+        code:
+          type: string
+        name:
+          type: string
+        factor:
+          type: string
+        value:
+          type: ["number", "null"]
+        unit:
+          type: string
+        date:
+          type: ["string", "null"]
+        sourceName:
+          type: string
+        sourceUrl:
+          type: string
+        sourceStatus:
+          type: string
+          enum: [available, unavailable, stale]
+        lastSuccessfulRefresh:
+          type: ["string", "null"]
+        unavailableDetail:
+          type: ["string", "null"]
+
+    ActiveStorm:
+      type: object
+      required: [id, name, classification, relevance]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        classification:
+          type: string
+        intensity:
+          type: ["string", "null"]
+        lastUpdate:
+          type: ["string", "null"]
+        advisoryUrl:
+          type: ["string", "null"]
+        distanceKm:
+          type: ["number", "null"]
+        relevance:
+          type: string
+
+    ActiveTropicalCyclones:
+      type: object
+      required: [sourceName, sourceUrl, sourceStatus, coverageNote, storms]
+      properties:
+        sourceName:
+          type: string
+        sourceUrl:
+          type: string
+        sourceStatus:
+          type: string
+          enum: [available, unavailable, stale]
+        lastSuccessfulRefresh:
+          type: ["string", "null"]
+        unavailableDetail:
+          type: ["string", "null"]
+        coverageNote:
+          type: string
+        storms:
+          type: array
+          items:
+            $ref: "#/components/schemas/ActiveStorm"
+
+    ThreatAdvisory:
+      type: object
+      required: [id, title, category, status, severity, summary, sourceName, sourceStatus]
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        category:
+          type: string
+        status:
+          type: string
+          enum: [current, watchlist, unavailable]
+        severity:
+          type: string
+        summary:
+          type: string
+        sourceName:
+          type: string
+        sourceUrl:
+          type: ["string", "null"]
+        sourceStatus:
+          type: string
+          enum: [available, unavailable, stale]
+        lastUpdated:
+          type: ["string", "null"]
+
+    HistoricalExposureEvent:
+      type: object
+      required: [name, year, severity, hazardType]
+      properties:
+        name:
+          type: string
+        year:
+          type: number
+        severity:
+          type: string
+        hazardType:
+          type: string
+
+    HistoricalExposure:
+      type: object
+      required: [sourceName, sourceUrl, sourceStatus, methodology, events]
+      properties:
+        sourceName:
+          type: string
+        sourceUrl:
+          type: string
+        sourceStatus:
+          type: string
+          enum: [available, unavailable, stale]
+        lastSuccessfulRefresh:
+          type: ["string", "null"]
+        methodology:
+          type: string
+        events:
+          type: array
+          items:
+            $ref: "#/components/schemas/HistoricalExposureEvent"
+
+    ResilienceFactor:
+      type: object
+      required: [name, weight, direction]
+      properties:
+        name:
+          type: string
+        value:
+          type: ["number", "null"]
+        weight:
+          type: string
+        direction:
+          type: string
+
+    ResilienceScore:
+      type: object
+      required: [modelVersion, label, factors, uncertainty, limitations, calculation]
+      properties:
+        modelVersion:
+          type: string
+        score:
+          type: ["number", "null"]
+        label:
+          type: string
+        factors:
+          type: array
+          items:
+            $ref: "#/components/schemas/ResilienceFactor"
+        uncertainty:
+          type: string
+        limitations:
+          type: string
+        calculation:
+          type: string
+
+    RegionalReference:
+      type: object
+      required: [name, url, note]
+      properties:
+        name:
+          type: string
+        url:
+          type: string
+        note:
+          type: string
+
+    CountryRiskOverview:
+      type: object
+      required: [country, phase, worldBankIndicators, activeTropicalCyclones, currentThreatAdvisories, historicalExposure, resilience, regionalReference, administrativeFocusAreas]
+      properties:
+        country:
+          $ref: "#/components/schemas/RiskCountry"
+        phase:
+          $ref: "#/components/schemas/DisasterPhaseState"
+        worldBankIndicators:
+          type: array
+          items:
+            $ref: "#/components/schemas/WorldBankIndicator"
+        activeTropicalCyclones:
+          $ref: "#/components/schemas/ActiveTropicalCyclones"
+        currentThreatAdvisories:
+          type: array
+          items:
+            $ref: "#/components/schemas/ThreatAdvisory"
+        historicalExposure:
+          $ref: "#/components/schemas/HistoricalExposure"
+        resilience:
+          $ref: "#/components/schemas/ResilienceScore"
+        administrativeFocusAreas:
+          type: array
+          items:
+            $ref: "#/components/schemas/AdministrativeFocusArea"
+        regionalReference:
+          $ref: "#/components/schemas/RegionalReference"
+
+    AdministrativeFocusArea:
+      type: object
+      required: [id, name, level, latitude, longitude, scopeNote]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        level:
+          type: string
+          enum: [city, district, parish]
+        latitude:
+          type: number
+        longitude:
+          type: number
+        scopeNote:
+          type: string
+
+    BusinessContinuityOrganization:
+      type: object
+      required: [id, name, category, location, status, evidenceSource, confidence]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        category:
+          type: string
+          enum: [bank, hotel, school, health_facility, fuel, food, logistics]
+        location:
+          type: string
+        status:
+          type: string
+          enum: [operational, disrupted, unknown]
+        evidenceSource:
+          type: string
+        confidence:
+          type: string
+          enum: [self_reported, partner_verified, unknown]
+        lastUpdated:
+          type: ["string", "null"]
+
+    BusinessContinuityDirectory:
+      type: object
+      required: [countryCode, organizations, note]
+      properties:
+        countryCode:
+          type: string
+        organizations:
+          type: array
+          items:
+            $ref: "#/components/schemas/BusinessContinuityOrganization"
+        note:
+          type: string
+
+    Parish:
+      type: object
+      required: [id, name, readinessScore, readinessLevel, bottleneck]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        readinessScore:
+          type: number
+        readinessLevel:
+          type: string
+          enum: [Critical, At risk, Moderate]
+        bottleneck:
+          type: string
+
+    ParishReadinessSource:
+      type: object
+      required: [id, name, authority, sourceUrl, permission, permissionNote, observationDate, freshnessState, sourceStatus, lastSuccessfulRefresh, lastCheckedAt, contentSha256, refreshExpectation, detail]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        authority:
+          type: string
+        sourceUrl:
+          type: string
+        permission:
+          type: string
+          enum: [public_attribution, public_record]
+        permissionNote:
+          type: string
+        observationDate:
+          type: ["string", "null"]
+        freshnessState:
+          type: string
+          enum: [current, historical, stale, unavailable]
+        sourceStatus:
+          type: string
+          enum: [available, unavailable, stale]
+        lastSuccessfulRefresh:
+          type: ["string", "null"]
+        lastCheckedAt:
+          type: ["string", "null"]
+        contentSha256:
+          type: ["string", "null"]
+        refreshExpectation:
+          type: string
+        detail:
+          type: ["string", "null"]
+
+    ParishReadinessMetric:
+      type: object
+      required: [label, value, unit, sourceRecordId, sourceId, sourceName, sourceUrl, sourceStatus, observationDate, freshnessState, lastUpdated, lastCheckedAt, refreshExpectation, unavailableDetail, dataLayers, evidenceType, note]
+      properties:
+        label:
+          type: string
+        value:
+          type: ["number", "null"]
+        unit:
+          type: string
+        sourceRecordId:
+          type: ["string", "null"]
+        sourceId:
+          type: ["string", "null"]
+        sourceName:
+          type: string
+        sourceUrl:
+          type: ["string", "null"]
+        sourceStatus:
+          type: string
+          enum: [available, unavailable, stale]
+        observationDate:
+          type: ["string", "null"]
+        freshnessState:
+          type: string
+          enum: [current, historical, stale, unavailable]
+        lastUpdated:
+          type: ["string", "null"]
+        lastCheckedAt:
+          type: ["string", "null"]
+        refreshExpectation:
+          type: string
+        unavailableDetail:
+          type: ["string", "null"]
+        dataLayers:
+          type: array
+          items:
+            type: string
+        evidenceType:
+          type: string
+          enum: [verified_observation, planning_proxy, unavailable]
+        note:
+          type: string
+
+    ParishReadinessFactor:
+      type: object
+      required: [name, score, weight, direction, metrics]
+      properties:
+        name:
+          type: string
+        score:
+          type: ["number", "null"]
+        weight:
+          type: string
+        direction:
+          type: string
+        metrics:
+          type: array
+          items:
+            $ref: "#/components/schemas/ParishReadinessMetric"
+
+    ParishReadinessTrendPoint:
+      type: object
+      required: [label, score, kind]
+      properties:
+        label:
+          type: string
+        score:
+          type: number
+        kind:
+          type: string
+          enum: [observed, planning_proxy, scenario_projection]
+
+    ParishReadinessPeerComparison:
+      type: object
+      required: [rank, totalParishes, nationalAverage, lowestParish, lowestScore]
+      properties:
+        rank:
+          type: number
+        totalParishes:
+          type: number
+        nationalAverage:
+          type: number
+        lowestParish:
+          type: string
+        lowestScore:
+          type: number
+
+    ParishReadinessEvidence:
+      type: object
+      required: [factors, sources, trend, trendSummary, peerComparison, scopeNote]
+      properties:
+        factors:
+          type: array
+          items:
+            $ref: "#/components/schemas/ParishReadinessFactor"
+        sources:
+          type: array
+          items:
+            $ref: "#/components/schemas/ParishReadinessSource"
+        trend:
+          type: array
+          items:
+            $ref: "#/components/schemas/ParishReadinessTrendPoint"
+        trendSummary:
+          type: string
+        peerComparison:
+          $ref: "#/components/schemas/ParishReadinessPeerComparison"
+        scopeNote:
+          type: string
+
+    ParishDetail:
+      type: object
+      required: [id, name, readinessScore, readinessLevel, bottleneck, population, area, readinessEvidence]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        readinessScore:
+          type: number
+        readinessLevel:
+          type: string
+          enum: [Critical, At risk, Moderate]
+        bottleneck:
+          type: string
+        population:
+          type: number
+        area:
+          type: number
+        capitalCity:
+          type: string
+        readinessEvidence:
+          $ref: "#/components/schemas/ParishReadinessEvidence"
+
+    HurricaneEvent:
+      type: object
+      required: [id, name, year, month, category, deaths, damageMillion, description, parishIds]
+      properties:
+        id:
+          type: number
+        name:
+          type: string
+        year:
+          type: number
+        month:
+          type: string
+        category:
+          type: number
+        deaths:
+          type: number
+        damageMillion:
+          type: number
+        description:
+          type: string
+        recoveryMonths:
+          type: ["number", "null"]
+        parishIds:
+          type: array
+          items:
+            type: string
+
+    CitizenReport:
+      type: object
+      required: [id, parishId, reporterName, content, timestamp, status, hasPhoto]
+      properties:
+        id:
+          type: number
+        parishId:
+          type: string
+        reporterName:
+          type: string
+        content:
+          type: string
+        timestamp:
+          type: string
+        category:
+          type: string
+          enum: [infrastructure, medical, supplies, flooding, shelter, other]
+        status:
+          type: string
+          enum: [pending, reviewed, approved, rejected]
+        location:
+          type: string
+        hasPhoto:
+          type: boolean
+        photoObjectPath:
+          type: string
+          description: Available only after the report has been reviewed.
+
+    CitizenReportInput:
+      type: object
+      required: [reporterName, content, category]
+      properties:
+        reporterName:
+          type: string
+          minLength: 1
+        content:
+          type: string
+          minLength: 1
+        category:
+          type: string
+          enum: [infrastructure, medical, supplies, flooding, shelter, other]
+        location:
+          type: string
+          maxLength: 160
+        photoObjectPath:
+          type: string
+          pattern: "^/objects/uploads/[A-Za-z0-9-]+$"
+
+    UploadUrlRequest:
+      type: object
+      required: [name, size, contentType]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 120
+        size:
+          type: number
+          minimum: 1
+          maximum: 5242880
+        contentType:
+          type: string
+          enum: [image/jpeg, image/png, image/webp]
+
+    UploadUrlResponse:
+      type: object
+      required: [uploadURL, objectPath, metadata]
+      properties:
+        uploadURL:
+          type: string
+        objectPath:
+          type: string
+        metadata:
+          $ref: "#/components/schemas/UploadUrlRequest"
+
+    Task:
+      type: object
+      required: [id, incidentId, title, parishId, parishName, officer, instructions, status, createdAt, statusChangedAt, scoreImpact]
+      properties:
+        id:
+          type: string
+        incidentId:
+          type: number
+        title:
+          type: string
+        parishId:
+          type: string
+        parishName:
+          type: string
+        officer:
+          type: string
+        instructions:
+          type: string
+        scoreArea:
+          type: string
+          enum: [readiness, recovery, resilience, incident_risk]
+        recommendationId:
+          type: string
+        expectedImpact:
+          type: string
+        scoreImpact:
+          $ref: "#/components/schemas/TaskScoreImpact"
+        evidenceStatus:
+          type: string
+          enum: [planning_guidance, partner_reported, evidence_backed]
+        status:
+          type: string
+          enum: [assigned, in_progress, pending_verification, completed]
+        createdAt:
+          type: string
+        statusChangedAt:
+          type: string
+        startedAt:
+          type: string
+        submittedAt:
+          type: string
+        completedAt:
+          type: string
+        fieldNote:
+          type: string
+        verifiedAt:
+          type: string
+        verifiedBy:
+          type: string
+        lastActor:
+          type: string
+
+    TaskDispatchInput:
+      type: object
+      required: [incidentId, title, parishId, parishName, officer, instructions]
+      properties:
+        incidentId:
+          type: number
+        title:
+          type: string
+        parishId:
+          type: string
+        parishName:
+          type: string
+        officer:
+          type: string
+        instructions:
+          type: string
+        scoreArea:
+          type: string
+          enum: [readiness, recovery, resilience, incident_risk]
+        recommendationId:
+          type: string
+        expectedImpact:
+          type: string
+        impactPoints:
+          type: number
+        evidenceStatus:
+          type: string
+          enum: [planning_guidance, partner_reported, evidence_backed]
+
+    TaskCompleteInput:
+      type: object
+      required: [fieldNote]
+      properties:
+        fieldNote:
+          type: string
+          minLength: 1
+        actor:
+          type: string
+
+    TaskActorInput:
+      type: object
+      required: [actor]
+      properties:
+        actor:
+          type: string
+          minLength: 1
+
+    TaskSubmissionInput:
+      type: object
+      required: [actor, fieldNote]
+      properties:
+        actor:
+          type: string
+          minLength: 1
+        fieldNote:
+          type: string
+          minLength: 1
+
+    TaskVerificationInput:
+      type: object
+      required: [actor]
+      properties:
+        actor:
+          type: string
+          minLength: 1
+
+    TaskScoreImpact:
+      type: object
+      required: [area, points, unlocked]
+      properties:
+        area:
+          type: string
+          enum: [readiness, recovery, resilience, incident_risk]
+        points:
+          type: number
+        unlocked:
+          type: boolean
+
+    ResourceItem:
+      type: object
+      required: [resourceType, quantity, unit, availabilityWindow]
+      properties:
+        resourceType:
+          type: string
+        quantity:
+          type: number
+        unit:
+          type: string
+        availabilityWindow:
+          type: string
+          enum: [immediately, within_6h, within_24h, within_48h]
+
+    OperatorAuthority:
+      type: object
+      required: [isAuthenticated, role, parishId]
+      properties:
+        isAuthenticated:
+          type: boolean
+        role:
+          type: ["string", "null"]
+          enum: [national_coordinator, parish_manager, field_officer, system_admin, private_sector_partner, null]
+        parishId:
+          type: ["string", "null"]
+
+    OperatorInvitationInput:
+      type: object
+      required: [email, parishId, name, role, roleTitle, agency, icsFunction, contactChannel]
+      properties:
+        email:
+          type: string
+        name:
+          type: string
+        parishId:
+          type: string
+        role:
+          type: string
+          enum: [parish_manager, field_officer]
+        roleTitle:
+          type: string
+        agency:
+          type: string
+        icsFunction:
+          type: string
+        contactChannel:
+          type: string
+
+    OperatorInvitation:
+      type: object
+      required: [id, email, name, role, roleTitle, agency, icsFunction, contactChannel, parishId, parishName, status, createdAt]
+      properties:
+        id:
+          type: string
+        email:
+          type: string
+        name:
+          type: string
+        role:
+          type: string
+          enum: [parish_manager, field_officer]
+        roleTitle:
+          type: string
+        agency:
+          type: string
+        icsFunction:
+          type: string
+        contactChannel:
+          type: string
+        parishId:
+          type: string
+        parishName:
+          type: string
+        status:
+          type: string
+          enum: [pending]
+        createdAt:
+          type: string
+
+    ResourceDeclarationInput:
+      type: object
+      required: [organizationName, organizationType, parishId, facilityCategory, location, resources]
+      properties:
+        organizationName:
+          type: string
+        organizationType:
+          type: string
+        parishId:
+          type: string
+        facilityCategory:
+          $ref: "#/components/schemas/InfrastructureCategory"
+        location:
+          type: string
+        contactNotes:
+          type: string
+        resources:
+          type: array
+          items:
+            $ref: "#/components/schemas/ResourceItem"
+
+    ResourceDeclaration:
+      type: object
+      required: [id, organizationId, organizationName, organizationType, parishId, facilityCategory, location, provenance, resources, timestamp]
+      properties:
+        id:
+          type: string
+        organizationId:
+          type: string
+        organizationName:
+          type: string
+        organizationType:
+          type: string
+        parishId:
+          type: string
+        facilityCategory:
+          $ref: "#/components/schemas/InfrastructureCategory"
+        location:
+          type: string
+        contactNotes:
+          type: string
+        provenance:
+          type: string
+          enum: [demo_seed, user_submitted]
+        resources:
+          type: array
+          items:
+            $ref: "#/components/schemas/ResourceItem"
+        timestamp:
+          type: string
+
+    ResourceCategoryEntry:
+      type: object
+      required: [organizationName, parishId, quantity, unit, availabilityWindow, provenance]
+      properties:
+        organizationName:
+          type: string
+        parishId:
+          type: string
+        quantity:
+          type: number
+        unit:
+          type: string
+        availabilityWindow:
+          type: string
+        provenance:
+          type: string
+          enum: [demo_seed, user_submitted]
+
+    ResourceCategoryTotal:
+      type: object
+      required: [resourceType, totalQuantity, unit, declarationCount, declarations]
+      properties:
+        resourceType:
+          type: string
+        totalQuantity:
+          type: number
+        unit:
+          type: string
+        declarationCount:
+          type: number
+        declarations:
+          type: array
+          items:
+            $ref: "#/components/schemas/ResourceCategoryEntry"
+
+    ResourceSummary:
+      type: object
+      required: [totalDeclarations, containsDemoData, categories, lastUpdated]
+      properties:
+        totalDeclarations:
+          type: number
+        containsDemoData:
+          type: boolean
+        categories:
+          type: array
+          items:
+            $ref: "#/components/schemas/ResourceCategoryTotal"
+        lastUpdated:
+          type: string
+
+    ResourceOperationalInput:
+      type: object
+      required: [parishId, resourceType, unit, deployedQuantity, verifiedAvailableQuantity, evidenceNote]
+      properties:
+        parishId:
+          type: string
+        resourceType:
+          type: string
+        unit:
+          type: string
+        deployedQuantity:
+          type: number
+          minimum: 0
+        verifiedAvailableQuantity:
+          type: number
+          minimum: 0
+        evidenceNote:
+          type: string
+          minLength: 3
+
+    ResourceOperationalStatus:
+      type: object
+      required:
+        - parishId
+        - resourceType
+        - unit
+        - declaredQuantity
+        - declarationCount
+        - targetQuantity
+        - targetEvidenceReference
+        - targetEvidenceCapturedAt
+        - deployedQuantity
+        - verifiedAvailableQuantity
+        - operationalStatus
+        - shortfallQuantity
+        - lastOperationalUpdateAt
+        - recordedByRole
+        - operationalEvidenceNote
+      properties:
+        parishId:
+          type: string
+        resourceType:
+          type: string
+        unit:
+          type: string
+        declaredQuantity:
+          type: number
+        declarationCount:
+          type: number
+        targetQuantity:
+          type: ["number", "null"]
+        targetEvidenceReference:
+          type: ["string", "null"]
+        targetEvidenceCapturedAt:
+          type: ["string", "null"]
+        deployedQuantity:
+          type: ["number", "null"]
+        verifiedAvailableQuantity:
+          type: ["number", "null"]
+        operationalStatus:
+          type: string
+          enum: [unverified, sufficient, shortfall]
+        shortfallQuantity:
+          type: ["number", "null"]
+        lastOperationalUpdateAt:
+          type: ["string", "null"]
+        recordedByRole:
+          type: ["string", "null"]
+        operationalEvidenceNote:
+          type: ["string", "null"]
+
+    ParishResources:
+      type: object
+      required: [parishId, fuelPercent, waterPercent, medicalPercent, lastUpdated]
+      properties:
+        parishId:
+          type: string
+        fuelPercent:
+          type: number
+        waterPercent:
+          type: number
+        medicalPercent:
+          type: number
+        lastUpdated:
+          type: string
+
+    InfrastructureCategory:
+      type: string
+      enum: [hotel, bank, church_faith, fuel, medical, food, shelter, logistics, other]
+
+    InfrastructureResourceOffer:
+      type: object
+      required: [resourceType, quantity, unit, availabilityWindow]
+      properties:
+        resourceType:
+          type: string
+        quantity:
+          type: number
+        unit:
+          type: string
+        availabilityWindow:
+          type: string
+          enum: [immediately, within_6h, within_24h, within_48h]
+
+    InfrastructurePartnerOffer:
+      type: object
+      required: [id, organizationName, organizationType, parishId, facilityCategory, location, resources, source, verificationStatus, lastUpdated]
+      properties:
+        id:
+          type: string
+        organizationName:
+          type: string
+        organizationType:
+          type: string
+        parishId:
+          type: string
+        facilityCategory:
+          $ref: "#/components/schemas/InfrastructureCategory"
+        location:
+          type: string
+        contactNotes:
+          type: string
+        resources:
+          type: array
+          items:
+            $ref: "#/components/schemas/InfrastructureResourceOffer"
+        source:
+          type: string
+          enum: [private_sector_submission]
+        verificationStatus:
+          type: string
+          enum: [demo_seed, unverified_submission, partner_reported, verified]
+        lastUpdated:
+          type: string
+
+    GoogleMapsSearchLink:
+      type: object
+      required: [category, label, url]
+      properties:
+        category:
+          $ref: "#/components/schemas/InfrastructureCategory"
+        label:
+          type: string
+        url:
+          type: string
+
+    GoogleMapsDirectory:
+      type: object
+      required: [status, sourceName, message, searchLinks, places]
+      properties:
+        status:
+          type: string
+          enum: [idle, available, unavailable, stale]
+        sourceName:
+          type: string
+        message:
+          type: string
+        searchLinks:
+          type: array
+          items:
+            $ref: "#/components/schemas/GoogleMapsSearchLink"
+        places:
+          type: array
+          items:
+            $ref: "#/components/schemas/GoogleMapsPlace"
+        fetchedAt:
+          type: string
+        expiresAt:
+          type: string
+
+    GoogleMapsPlace:
+      type: object
+      required: [placeId, name, category, address, mapUrl]
+      properties:
+        placeId:
+          type: string
+        name:
+          type: string
+        category:
+          $ref: "#/components/schemas/InfrastructureCategory"
+        address:
+          type: string
+        mapUrl:
+          type: string
+        rating:
+          type: number
+        ratingCount:
+          type: number
+        phoneNumber:
+          type: string
+        websiteUrl:
+          type: string
+        types:
+          type: array
+          items:
+            type: string
+        openNow:
+          type: boolean
+
+    InfrastructureOverview:
+      type: object
+      required: [parishId, parishName, categories, googleDirectory, partnerOffers, lastUpdated]
+      properties:
+        parishId:
+          type: string
+        parishName:
+          type: string
+        categories:
+          type: array
+          items:
+            $ref: "#/components/schemas/GoogleMapsSearchLink"
+        googleDirectory:
+          $ref: "#/components/schemas/GoogleMapsDirectory"
+        partnerOffers:
+          type: array
+          items:
+            $ref: "#/components/schemas/InfrastructurePartnerOffer"
+        lastUpdated:
+          type: string
+
+    StormScenario:
+      type: string
+      enum: [tropical_storm, category_1, category_2, category_3, category_4, category_5]
+
+    RecoveryForecast:
+      type: object
+      required: [parishId, stormScenario, stormLabel, scenarioMultiplier, powerRestorationDays, roadAccessDays, waterRestorationDays, communicationsDays, evacuationCapacityDays, overallRecoveryDays, modelVersion, sourceName, sourceDate, calculation, limitations]
+      properties:
+        parishId:
+          type: string
+        stormScenario:
+          $ref: "#/components/schemas/StormScenario"
+        stormLabel:
+          type: string
+        scenarioMultiplier:
+          type: number
+        powerRestorationDays:
+          type: number
+        roadAccessDays:
+          type: number
+        waterRestorationDays:
+          type: number
+        communicationsDays:
+          type: number
+        evacuationCapacityDays:
+          type: number
+        overallRecoveryDays:
+          type: number
+        modelVersion:
+          type: string
+        sourceName:
+          type: string
+        sourceDate:
+          type: string
+        calculation:
+          type: string
+        limitations:
+          type: string
+
+    DashboardSummary:
+      type: object
+      required: [totalParishes, criticalCount, atRiskCount, moderateCount, avgReadinessScore, pendingReviewCount, activeAgents, recentEvents]
+      properties:
+        totalParishes:
+          type: number
+        criticalCount:
+          type: number
+        atRiskCount:
+          type: number
+        moderateCount:
+          type: number
+        avgReadinessScore:
+          type: number
+        pendingReviewCount:
+          type: number
+        activeAgents:
+          type: number
+        recentEvents:
+          type: array
+          items:
+            type: string
+
+    ReviewItem:
+      type: object
+      required: [id, parishId, parishName, type, title, description, status, metadata, createdAt]
+      properties:
+        id:
+          type: number
+        parishId:
+          type: string
+        parishName:
+          type: string
+        type:
+          type: string
+          enum: [citizen_report, resource_request, evacuation_plan, infrastructure_alert]
+        title:
+          type: string
+        description:
+          type: string
+        status:
+          type: string
+          enum: [pending, approved, rejected]
+        metadata:
+          oneOf:
+            - $ref: "#/components/schemas/RegionalAidMetadata"
+            - $ref: "#/components/schemas/CitizenReportReviewMetadata"
+            - type: "null"
+        createdAt:
+          type: string
+        reviewedAt:
+          type: ["string", "null"]
+        reviewedBy:
+          type: ["string", "null"]
+
+    ReviewItemUpdate:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [approved, rejected]
+        reviewedBy:
+          type: string
+        reason:
+          type: string
+          description: Required when the review item is rejected.
+
+    CitizenReportReviewMetadata:
+      type: object
+      required: [kind, reportId, reporterName, evidenceStatus]
+      properties:
+        kind:
+          type: string
+          enum: [citizen_report]
+        reportId:
+          type: number
+        reporterName:
+          type: string
+        location:
+          type: ["string", "null"]
+        photoObjectPath:
+          type: ["string", "null"]
+        photoContentType:
+          type: ["string", "null"]
+        photoSizeBytes:
+          type: ["number", "null"]
+        evidenceStatus:
+          type: string
+          enum: [unverified_citizen_submission]
+
+    RegionalAidAssessmentInput:
+      type: object
+      required: [parishId]
+      properties:
+        parishId:
+          type: string
+
+    RegionalAidAssessmentResponse:
+      type: object
+      required: [created, reason, reviewItem]
+      properties:
+        created:
+          type: boolean
+        reason:
+          type: ["string", "null"]
+        reviewItem:
+          oneOf:
+            - $ref: "#/components/schemas/ReviewItem"
+            - type: "null"
+
+    RegionalAidMetadata:
+      type: object
+      required: [kind, draftId, title, resourceType, resourceLabel, quantity, unit, destination, urgency, rationale, requestedMessage, evidence, suggestedCountries, limitations, aiProvider, aiModel, generatedAt]
+      properties:
+        kind:
+          type: string
+          enum: [regional_aid_request]
+        draftId:
+          type: string
+        title:
+          type: string
+        resourceType:
+          type: string
+        resourceLabel:
+          type: string
+        quantity:
+          type: number
+        unit:
+          type: string
+        destination:
+          type: string
+        urgency:
+          type: string
+          enum: [critical, high, medium]
+        rationale:
+          type: string
+        requestedMessage:
+          type: string
+        evidence:
+          type: array
+          items:
+            $ref: "#/components/schemas/RegionalAidEvidence"
+        suggestedCountries:
+          type: array
+          items:
+            $ref: "#/components/schemas/RegionalAidCountrySuggestion"
+        limitations:
+          type: array
+          items:
+            type: string
+        aiProvider:
+          type: string
+        aiModel:
+          type: string
+        generatedAt:
+          type: string
+
+    RegionalAidEvidence:
+      type: object
+      required: [label, value, source, observedAt, status]
+      properties:
+        label:
+          type: string
+        value:
+          type: string
+        source:
+          type: string
+        observedAt:
+          type: ["string", "null"]
+        status:
+          type: string
+          enum: [verified_operational, planning_target, incident_signal]
+
+    RegionalAidCountrySuggestion:
+      type: object
+      required: [code, name, reason, planningOnly]
+      properties:
+        code:
+          type: string
+        name:
+          type: string
+        reason:
+          type: string
+        planningOnly:
+          type: boolean
+
+    Agent:
+      type: object
+      required: [id, name, description, status, lastAction, parishesMonitored]
+      properties:
+        id:
+          type: number
+        name:
+          type: string
+        description:
+          type: string
+        status:
+          type: string
+          enum: [active, idle, error, paused]
+        lastAction:
+          type: string
+        lastActionAt:
+          type: string
+        parishesMonitored:
+          type: array
+          items:
+            type: string
+
+    AuditEntry:
+      type: object
+      required: [id, agentName, action, parishId, parishName, timestamp, details]
+      properties:
+        id:
+          type: number
+        agentName:
+          type: string
+        action:
+          type: string
+        parishId:
+          type: string
+        parishName:
+          type: string
+        timestamp:
+          type: string
+        details:
+          type: string

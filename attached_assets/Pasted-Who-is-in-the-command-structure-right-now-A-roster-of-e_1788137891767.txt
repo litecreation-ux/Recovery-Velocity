@@ -1,0 +1,13 @@
+Who is in the command structure right now. A roster of every person and organization currently active in this incident — their name, role, agency, contact, when they joined, and their current status (Active, Standby, Offline). Grouped by ICS function: Command Staff, OPS Section, Logistics Section, Field Units, Unified Command Partners.
+
+Jurisdictional boundaries and handoffs. When multiple agencies are involved — say ODPEM nationally, the St. Thomas Parish Disaster Committee locally, and JDF (Jamaica Defence Force) for logistics — Unified Command defines who has authority over what. The platform should show which agency owns which geographic zone or function, and where the boundaries are.
+
+Shared Incident Objectives. In real ICS, Unified Command produces a single set of incident objectives that all agencies agree to operate under. On the platform this would be a pinned list — for example: Objective 1: Restore fuel supply to Portland and Westmoreland within 48 hours. Objective 2: Confirm shelter capacity for 2,400 displaced residents by end of day. Objective 3: Restore communications coverage to St. Andrew northern corridor. Every member of Unified Command sees these and all actions in the Incident Action Plan trace back to one of these objectives.
+
+Resource sharing agreements. When a partner organization joins Unified Command they declare what they are contributing — personnel, equipment, facilities — and what they need in return. The platform captures this as a formal mutual aid record rather than a verbal agreement.
+
+Communication log between agencies. A shared message thread visible to all Unified Command members — not individual chat but formal operational communications. Every message is timestamped and attributed. This feeds the AuditLogger agent and becomes part of the immutable record.
+
+External agency status. If CDEMA regional support has been requested, or if JDF has been activated, or if international NGOs like IFRC or WFP are operating in the area — their status and point of contact lives here. The platform shows whether their resources have been declared, verified, and deployed into the Logistics Section.
+
+Invitation and access management. The Incident Commander sends an invitation with a predefined role. The invitee receives a link, joins the incident, and lands in the correct view automatically. The Commander can remove access or change roles at any time. Every access change is logged.

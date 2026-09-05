@@ -1,0 +1,19 @@
+Preparedness SITREP
+The job is explaining why the score is what it is. Format: two columns. Left column shows the three sub-scores (Readiness, Recovery, Resilience) as large numbers with a one-line explanation each. Right column shows contributing factors as a ranked list — highest positive factor at top, most damaging factor below it, with a simple horizontal bar showing each factor's weight. One sentence at the bottom says what would move the score most. No tables, no formulas visible by default.
+
+Incident Action Plan
+The job is telling the coordinator exactly what to do next. Format: cards sorted by priority, Critical first. Each card has four things only — what needs to be done (one bold headline), why it matters (one sentence), who is responsible (role label), and one button: Assign Task. Score impact shown as a small tag on the card e.g. "+8 pts". Nothing else. If a coordinator has to read more than three lines to understand the action, the card is too long.
+
+OPS Section
+The job is active triage — what is happening right now that needs a decision. Format: a feed, not cards. Each item is a single row: severity badge, incident title, location, type tag, time elapsed, and an Open button on the right. Clicking Open expands it inline to show detail and the action buttons. Default view shows only Critical and High items. A filter bar at the top lets the coordinator switch to see all. The 354-item problem gets solved here — default filter hides anything below High priority.
+
+Logistics Section
+The job is resource visibility — what is available, where, and is it enough. Format: a grid of resource categories across the top (Fuel, Food, Shelter, Vehicles, Medical, Personnel) each showing a simple number — total units declared, units deployed, units available. Clicking a category expands a table below showing which organization has what, in which parish, and when it was declared. The Unified Command private sector declarations feed directly into this grid. A coordinator should be able to answer "do we have enough fuel in Westmoreland" in two clicks.
+
+Incident Command
+The job is authorization — nothing moves without a decision here. Format: each item takes the full width of the screen, one at a time. Large readable text for the recommendation. Evidence sources listed below it. Two large buttons: Approve and Reject. After a decision, the next item slides in. No scrolling list — one decision at a time forces focus. A counter at the top shows "3 of 12 pending" so the coordinator knows how long the queue is without being overwhelmed by seeing all 12 at once.
+
+Unified Command Partner (Private Sector)
+The job is resource declaration and visibility. Format: split view. Left side is the declaration form — clean, no more than five fields, with the resource row builder underneath. Right side is a live feed of what has been declared by others, grouped by category, updating in real time. A partner should be able to declare their resources and see the full picture of what is already available in under two minutes.
+
+The rule across all sections: one primary action per screen, everything else is supporting context. If there are two equally prominent buttons, the coordinator will hesitate. Every screen should make the next step obvious without reading instructions.

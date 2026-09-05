@@ -1,0 +1,11 @@
+Add role-based views to the existing RVP app. There are four user roles, each seeing a different interface. Add a role switcher in the top bar — a dropdown or toggle — so during demo you can switch between roles instantly without logging in.
+
+National Coordinator — this is the current dashboard. No changes needed. Sees all 14 parishes on the map, national readiness overview, cross-parish resource allocation, and the full Incident Command queue across all parishes.
+
+Parish Emergency Manager — same layout as the national coordinator but scoped to one parish. The map zooms into and highlights only their assigned parish. The readiness score, forecast, bottleneck, citizen reports, and Incident Command queue all filter to that parish only. They can approve or reject items in the queue but only for their parish. Add a header banner showing their assigned parish name and role. Default assigned parish to St. Elizabeth for demo purposes.
+
+Field Officer — mobile-first layout, single column, optimized for a phone screen. Shows three things only: active alerts sent to their zone (read-only list), current resource status for their area (fuel, water, medical supplies as simple indicators), and a Submit Report form. The form has fields for: report type (dropdown — Infrastructure Damage, Supply Need, Citizen Evacuation, Medical Emergency), description (text area), location (text input), and a Submit button. Submitted reports go to POST /api/citizen-reports on the backend and immediately appear in the citizen reports list visible to coordinators. No map, no readiness score, no approve/reject buttons.
+
+System Admin — the existing Agent Monitor view with the autonomous agent fleet cards and fleet telemetry log. No changes needed. This role is the only one that sees the agent internals.
+
+The role switcher should be a dropdown in the top bar labelled "Role" showing the four options. Switching roles re-renders the main content area without a page reload. The sidebar navigation should also update per role — Field Officer only sees a Reports nav item, Parish Manager sees Dashboard and Incident Command, National Coordinator sees everything, System Admin sees Agent Monitor only.

@@ -1,0 +1,14 @@
+- [OpenAPI Zod helper limits](zod-integer-spec.md) — Avoid spec constructs that generate Zod v4-only helpers: use `number` not `integer`, and validate email format manually
+- [Jamaica GeoJSON](jamaica-geojson.md) — External GeoBoundaries URLs return HTML in sandbox; use hardcoded polygons at `artifacts/rvp/src/lib/jamaica-geojson.ts`
+- [geoBoundaries browser delivery](geoboundaries-browser-delivery.md) — Use pinned GitHub media URLs for live ADM1 GeoJSON; raw URLs can return redirects or LFS pointers.
+- [esbuild zod/v4](esbuild-zod.md) — esbuild cannot resolve `zod/v4` subpath; API server routes must not import from `zod/v4` directly — use manual validation or `@workspace/api-zod`
+- [In-memory operational stores](in-memory-stores.md) — Resource declarations and dispatch tasks still reset on API restart; Unified Command records are separately database-backed.
+- [Codegen workflow](codegen-workflow.md) — After any OpenAPI spec change: run `pnpm --filter @workspace/api-spec run codegen`, then restart API server workflow
+- [Caribbean resilience scope](caribbean-resilience-scope.md) — Keep risk selection Caribbean-only until verified local operational coverage is added elsewhere.
+- [Orval mixed parameters](orval-mixed-parameters.md) — Avoid mixing path and query parameters in one operation; this generator setup emits colliding Zod/type exports.
+- [Google Maps connection scope](google-maps-connection-scope.md) — The installed custom MCP connection provides documentation tools only; app Places requests need a server-side API key.
+- [Playwright on Replit Nix](playwright-replit-nix.md) — Fresh workspaces need a Chromium download plus Nix browser libraries before local Playwright suites can launch.
+- [Post-merge setup timeout](post-merge-timeout.md) — Dependency installation can exceed 20 seconds; keep the configured post-merge timeout above the observed install-plus-migration runtime.
+- [Wouter query navigation](wouter-query-navigation.md) — use window.location.search for query params; useLocation may expose only the pathname in this setup.
+- [AI mutual-aid safety boundary](ai-mutual-aid-safety.md) — Internal approval may create a requested record, but AI-suggested counterparts stay pending until separately verified.
+- [Communications delivery truth](communications-delivery-truth.md) — Offline and fallback messages remain queued/requested until a server or provider explicitly confirms delivery.

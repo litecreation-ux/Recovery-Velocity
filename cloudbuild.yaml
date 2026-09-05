@@ -1,0 +1,44 @@
+substitutions:
+  _REGION: us-east1
+  _SERVICE: recovery-velocity-platform
+  _AR_REPOSITORY: rvp-services
+  # Set to the stable Cloud Run URL (or custom HTTPS origin) before submitting.
+  _APP_ORIGIN: https://recovery-velocity-platform-REPLACE_WITH_HASH-ue.a.run.app
+  # Clerk publishable keys are intended for browser clients and are compiled by Vite.
+  _CLERK_PUBLISHABLE_KEY: ""
+
+steps:
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - --build-arg
+      - VITE_CLERK_PUBLISHABLE_KEY=${_CLERK_PUBLISHABLE_KEY}
+      - --tag
+      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPOSITORY}/${_SERVICE}:$SHORT_SHA
+      - .
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - push
+      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPOSITORY}/${_SERVICE}:$SHORT_SHA
+  - name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    entrypoint: gcloud
+    args:
+      - run
+      - deploy
+      - ${_SERVICE}
+      - --image=${_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPOSITORY}/${_SERVICE}:$SHORT_SHA
+      - --region=${_REGION}
+      - --platform=managed
+      - --allow-unauthenticated
+      - --ingress=all
+      - --timeout=3600
+      - --concurrency=40
+      - --min-instances=1
+      - --set-env-vars=NODE_ENV=production,RVP_APP_ORIGIN=${_APP_ORIGIN}
+      - --set-secrets=DATABASE_URL=rvp-database-url:latest,CLERK_SECRET_KEY=rvp-clerk-secret-key:latest,CLERK_PUBLISHABLE_KEY=rvp-clerk-publishable-key:latest,SESSION_SECRET=rvp-session-secret:latest
+
+images:
+  - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPOSITORY}/${_SERVICE}:$SHORT_SHA
+
+options:
+  logging: CLOUD_LOGGING_ONLY

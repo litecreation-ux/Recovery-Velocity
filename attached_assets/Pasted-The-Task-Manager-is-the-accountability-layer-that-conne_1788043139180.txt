@@ -1,0 +1,13 @@
+The Task Manager is the accountability layer that connects decisions to outcomes. Without it, approving something in Incident Command disappears into a void — nobody knows if it was actually done, and the score never moves because there is no evidence loop closed.
+
+Here is how it should be structured:
+
+Three columns, Kanban style: Assigned, In Progress, Completed. Each task card shows the incident title, assigned field unit leader, parish, time assigned, and which score component it affects (Readiness / Recovery / Resilience). A task moves from Assigned to In Progress when the Field Unit Leader opens it and taps "Start Work." It moves to Completed when they submit their field note as evidence.
+
+Score impact is shown but locked. Each card shows "+8 pts to Readiness — pending field evidence." The score does not change when the task is assigned or when it moves to In Progress. It only updates when a completed task has been verified by the OPS Section Chief. This is critical — it enforces the principle already stated on the SITREP screen that completing work does not automatically increase a score. The verification step is what changes it.
+
+Verification is a fourth state. After a Field Unit Leader marks a task complete and submits their field note, the card moves to a "Pending Verification" column before Completed. The OPS Section Chief reviews the evidence, confirms it is sufficient, and marks it verified. Only then does the score update. This closes the full governance loop: Incident Command authorizes, field executes, OPS Section verifies, score reflects reality.
+
+Filter by parish and score component. A coordinator should be able to look at the Task Manager and ask "what Readiness work is in progress in St. Thomas right now" in two clicks. Without filtering, the board becomes noise as tasks accumulate.
+
+The audit trail lives here. Every state change — assigned, started, completed, verified, rejected at verification — is timestamped with who made the decision. This feeds directly into the AuditLogger agent and becomes the immutable record judges and real government stakeholders would require

@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "Recovery Velocity Platform"
+description = "A disaster preparedness and recovery coordination dashboard for Jamaica, used by emergency management agencies to monitor readiness per parish. Features an interactive map, readiness scores, historical hurricane data, recovery forecasts, citizen reports, and a human review gate."
+version = "1.0.0"
+id = "artifacts/rvp"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 24858
+
+[services.development]
+run = "pnpm --filter @workspace/rvp run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/rvp", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/rvp/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "24858"
+BASE_PATH = "/"

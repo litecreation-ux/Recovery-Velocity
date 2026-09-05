@@ -1,0 +1,21 @@
+Thought process
+Thought process
+Add a task dispatch and completion loop to the existing app. This closes the full workflow cycle: agent detects → coordinator approves → coordinator dispatches to field officer → field officer completes → report feeds back into the system.
+
+When a coordinator approves an Incident Command item, do not just mark it approved and fade it. Instead, after approval, expand the item inline to show a dispatch form with three fields: assign to parish (dropdown of all 14 parishes), assign to field officer (dropdown — for demo use mock officers: "Officer Reid — Kingston", "Officer Brown — St. Thomas", "Officer Campbell — Westmoreland", "Officer White — Hanover", "Officer James — St. Elizabeth", "Officer Clarke — Portland"), and instructions (text area pre-filled with the incident text but editable). A "Dispatch Task" button sends this to POST /api/tasks/dispatch on the backend. The item then shows a "Dispatched" status with the assigned officer name and timestamp.
+
+On the backend, create these endpoints:
+
+POST /api/tasks/dispatch — accepts incident_id, parish, officer, instructions. Creates a new task in memory with status "assigned", a task_id, timestamp, and all the above fields. Returns the created task.
+
+GET /api/tasks — returns all tasks. Accepts optional query param ?officer=name to filter by assigned officer.
+
+POST /api/tasks/{id}/complete — accepts a field_note (string). Updates the task status to "completed", stores the note, and automatically creates a new entry in the citizen reports list and a new audit log entry recording who completed it, when, and what they reported.
+
+On the Field Officer view, add an Assigned Tasks section at the very top of the page, above the Submit Report form. It polls GET /api/tasks every 10 seconds filtered to their officer name. Each task card shows: task title from the incident, instructions from the coordinator, which parish it is in, when it was assigned, and a "Mark Complete" button. Clicking Mark Complete opens a small inline text area asking for a field note — what they found, what they did, current status on the ground. Submitting calls POST /api/tasks/{id}/complete and removes the task from the active list, replacing it with a "Completed" confirmation showing their note was received.
+
+On the National Coordinator and Parish Manager views, add a Dispatch Status panel that shows all active and recently completed tasks across all parishes. Each row shows: task title, assigned officer, parish, time dispatched, status (Assigned or Completed), and the field note if completed. This updates every 10 seconds.
+
+The ResourceExchangeAgent should also factor completed task notes into its next resource matching cycle. If a field note mentions "fuel delivered" or "shelter at capacity", the agent should detect those keywords and update the relevant resource count in the exchange layer automatically.
+
+On the Agent Monitor, add the dispatch events to the AuditLogger agent's last action feed so the telemetry log shows the full chain: recommendation → approval → dispatch → completion.

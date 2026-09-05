@@ -1,0 +1,44 @@
+Build a full-stack web app called the Recovery Velocity Platform (RVP) — a disaster preparedness and recovery coordination dashboard for Jamaica, used by emergency management agencies to monitor readiness per parish.
+
+Region selector: The top of the dashboard has a dropdown to select any of Jamaica's 14 parishes. Switching parish updates all data on the page. Default to Kingston on load.
+
+Map view: Use React Leaflet with OpenStreetMap tiles to show a map of Jamaica with all 14 parishes. Color each parish by its readiness score — green for 75+, amber for 50-74, red for below 50. Clicking a parish on the map switches the selected parish in the dropdown and updates all the dashboard panels. Fetch a Jamaica parish GeoJSON from a public source or hardcode simplified polygon coordinates for each parish.
+
+Parish readiness scores (mock these as fixed data per parish):
+
+Kingston: 72 — Moderate
+St. Andrew: 68 — Moderate
+St. Thomas: 44 — Critical (historically most isolated, hardest hit in Gilbert 1988 and Ivan 2004)
+Portland: 56 — At risk (mountainous terrain cuts off road access in storms)
+St. Mary: 63 — Moderate
+St. Ann: 74 — Moderate (tourism infrastructure provides buffer)
+Trelawny: 60 — At risk
+St. James: 71 — Moderate (Montego Bay, second-largest city)
+Hanover: 53 — At risk (severe flooding in Ivan 2004, Beryl 2024)
+Westmoreland: 49 — Critical (flood-prone lowland, heavily damaged in Ivan 2004 and Beryl 2024)
+St. Elizabeth: 65 — Moderate
+Manchester: 70 — Moderate (inland, higher elevation, lower storm surge risk)
+Clarendon: 61 — At risk
+St. Catherine: 66 — Moderate
+
+Historical context panel: Show a "Historical events" section on the dashboard that displays past hurricanes that affected the selected parish, with real data:
+
+Hurricane Gilbert, September 1988 — Category 5 direct hit on Jamaica. 45 deaths, over 100,000 homes damaged, USD 1 billion in damage. St. Thomas and Portland were cut off for weeks. National power grid failed entirely for 5+ days. Recovery time estimate: 18 months to baseline economic activity.
+
+Hurricane Ivan, September 2004 — Category 4, tracked south of Jamaica. 17 deaths, USD 350 million in damage. Westmoreland, Hanover, and St. James took the worst flooding. Major road damage on the north coast highway.
+
+Hurricane Sandy, October 2012 — Category 1 at landfall. Significant flooding in St. Thomas, Portland, and St. Mary. 1 death, USD 100 million in damage.
+
+Hurricane Beryl, July 2024 — Category 4 at Jamaica landfall. Severe damage across southern and western parishes. Westmoreland, Hanover, and St. Elizabeth lost power for 7-14 days. Fishing communities in Hanover largely destroyed.
+
+Show which events are relevant per parish — for example, Westmoreland shows Ivan, Beryl, and Gilbert. Kingston shows Gilbert and Sandy.
+
+Recovery forecast per parish: Each parish has different forecasted restoration times after a Category 3 equivalent event, based on infrastructure vulnerability. For example, St. Thomas forecasts 14.5 days for power restoration versus Kingston at 6.8 days. Populate realistic variation per parish.
+
+Bottleneck per parish: Each parish has a different top bottleneck. St. Thomas: "Restore ferry link to Kingston — the only reliable supply route when Route A4 floods." Westmoreland: "Pre-position fuel reserves at Savanna-la-Mar depot before storm season peak." Kingston: "Clear Route B1 (Spanish Town Road) — unlocks hospital access, fuel depot, and 3 utility staging areas."
+
+Citizen reports: Each parish has its own set of field reports from community members. Vary the content by parish.
+
+Human Review Gate: Same approve/reject functionality as before but labeled per parish. Items show which parish they affect.
+
+Agent statuses and audit log: Same 7 agents running across the platform. Audit log shows parish name alongside each action.
