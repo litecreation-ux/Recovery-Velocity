@@ -2,8 +2,7 @@ substitutions:
   _REGION: us-east1
   _SERVICE: recovery-velocity-platform
   _AR_REPOSITORY: rvp-services
-  # Set to the stable Cloud Run URL (or custom HTTPS origin) before submitting.
-  _APP_ORIGIN: https://recovery-velocity-platform-REPLACE_WITH_HASH-ue.a.run.app
+  _APP_ORIGIN: https://recovery-velocity-platform-usqaavdaza-ue.a.run.app
   # Clerk publishable keys are intended for browser clients and are compiled by Vite.
   _CLERK_PUBLISHABLE_KEY: ""
 
@@ -33,9 +32,11 @@ steps:
       - --ingress=all
       - --timeout=3600
       - --concurrency=40
-      - --min-instances=1
-      - --set-env-vars=NODE_ENV=production,RVP_APP_ORIGIN=${_APP_ORIGIN}
-      - --set-secrets=DATABASE_URL=rvp-database-url:latest,CLERK_SECRET_KEY=rvp-clerk-secret-key:latest,CLERK_PUBLISHABLE_KEY=rvp-clerk-publishable-key:latest,SESSION_SECRET=rvp-session-secret:latest
+      - --min-instances=0
+      - --service-account=rvp-replit@$PROJECT_ID.iam.gserviceaccount.com
+      - --add-cloudsql-instances=$PROJECT_ID:${_REGION}:rvp-postgres
+      - --set-env-vars=NODE_ENV=production,RVP_APP_ORIGIN=${_APP_ORIGIN},CLOUD_SQL_CONNECTION_NAME=$PROJECT_ID:${_REGION}:rvp-postgres,DB_NAME=rvp,DB_USER=rvp_app
+      - --set-secrets=DB_PASSWORD=rvp-db-password:latest,CLERK_SECRET_KEY=rvp-clerk-secret-key:latest,CLERK_PUBLISHABLE_KEY=rvp-clerk-publishable-key:latest,SESSION_SECRET=rvp-session-secret:latest
 
 images:
   - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPOSITORY}/${_SERVICE}:$SHORT_SHA
