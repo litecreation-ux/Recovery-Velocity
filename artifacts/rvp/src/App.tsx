@@ -110,7 +110,13 @@ function SignInPage() {
   return (
     <AuthLayout>
       <div className="space-y-5">
-        <SignIn routing="path" path={`${basePath}/sign-in`} signUpUrl={`${basePath}/sign-up`} withSignUp={false} />
+        <SignIn
+          routing="path"
+          path={`${basePath}/sign-in`}
+          signUpUrl={`${basePath}/sign-up`}
+          forceRedirectUrl={`${basePath}/`}
+          withSignUp={false}
+        />
         <div className="rounded-lg border border-slate-200 bg-slate-100 px-5 py-4 text-center">
           <p className="text-sm font-medium text-slate-900">Need access for your organization?</p>
           <p className="mt-1 text-sm leading-relaxed text-slate-600">
@@ -125,7 +131,12 @@ function SignInPage() {
 function SignUpPage() {
   return (
     <AuthLayout>
-      <SignUp routing="path" path={`${basePath}/sign-up`} signInUrl={`${basePath}/sign-in`} />
+      <SignUp
+        routing="path"
+        path={`${basePath}/sign-up`}
+        signInUrl={`${basePath}/sign-in`}
+        forceRedirectUrl={`${basePath}/onboarding`}
+      />
     </AuthLayout>
   );
 }
