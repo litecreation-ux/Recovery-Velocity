@@ -25,8 +25,116 @@ type InvitationMetadata = {
   rvpCountryName?: string;
 };
 
+type InvitationRecord = {
+  emailAddress?: string;
+  status?: string;
+  publicMetadata?: unknown;
+};
+
 function text(value: unknown, max = 160) {
   return typeof value === "string" ? value.trim().slice(0, max) : "";
+}
+
+function countryOrganization(country: { code: string; name: string }) {
+  return {
+    organizationId: country.code === "JAM"
+      ? "rvp-jamaica-command"
+      : `rvp-${country.code.toLowerCase()}-command`,
+    organizationName: `Recovery Velocity Platform ${country.name}`,
+  };
+}
+
+function matchesCountryOrganization(
+  country: { code: string; name: string },
+  organizationId: string,
+  organizationName: string,
+) {
+  const canonical = countryOrganization(country);
+  const validIds = country.code === "JAM"
+    ? new Set([canonical.organizationId, "rvp-jam-command"])
+    : new Set([canonical.organizationId]);
+  return validIds.has(organizationId) && organizationName === canonical.organizationName;
+}
+
+export function resolveInvitationAssignment(invitation: InvitationMetadata) {
+  const role = text(invitation.rvpRole);
+  const countryCode = text(invitation.rvpCountryCode).toUpperCase();
+  const country = COUNTRY_BY_CODE.get(countryCode);
+  if (
+    invitation.rvpInvitation !== true
+    || !ROLES.has(role)
+    || !country
+  ) return null;
+
+  const organization = countryOrganization(country);
+  if (
+    !matchesCountryOrganization(
+      country,
+      text(invitation.rvpOrganizationId),
+      text(invitation.rvpOrganizationName),
+    )
+  ) return null;
+
+  const requestedParishId = text(invitation.rvpParishId);
+  const parishId = country.code === "JAM" ? requestedParishId : "";
+  if (
+    PARISH_ROLES.has(role)
+    && country.code === "JAM"
+    && !PARISHES.some((parish) => parish.id === parishId)
+  ) return null;
+
+  return {
+    role,
+    parishId: parishId || undefined,
+    countryCode: country.code,
+    countryName: country.name,
+    organizationId: text(invitation.rvpOrganizationId),
+    organizationName: organization.organizationName,
+  };
+}
+
+export function findAcceptedInvitationMetadata(
+  invitations: InvitationRecord[],
+  emailAddress: string,
+): InvitationMetadata | null {
+  const normalizedEmail = emailAddress.trim().toLowerCase();
+  if (!normalizedEmail) return null;
+  const invitation = invitations.find((candidate) =>
+    candidate.status === "accepted"
+    && text(candidate.emailAddress).toLowerCase() === normalizedEmail
+  );
+  if (!invitation || !invitation.publicMetadata || typeof invitation.publicMetadata !== "object") {
+    return null;
+  }
+  const metadata = invitation.publicMetadata as InvitationMetadata;
+  return resolveInvitationAssignment(metadata) ? metadata : null;
+}
+
+export function resolveInvitationTarget(
+  inviterRole: string,
+  inviterMetadata: Record<string, unknown>,
+  requestedCountryCode: string,
+) {
+  const currentCountryCode = text(inviterMetadata.rvpCountryCode).toUpperCase()
+    || (text(inviterMetadata.rvpOrganizationId) === "rvp-jamaica-command" ? "JAM" : "");
+  const country = COUNTRY_BY_CODE.get(
+    inviterRole === "system_admin" ? requestedCountryCode.toUpperCase() : currentCountryCode,
+  );
+  if (!country) return null;
+
+  if (inviterRole === "system_admin") {
+    return { country, ...countryOrganization(country) };
+  }
+
+  const canonicalOrganization = countryOrganization(country);
+  const organizationId = text(inviterMetadata.rvpOrganizationId);
+  const organizationName = text(inviterMetadata.rvpOrganizationName);
+  if (!matchesCountryOrganization(country, organizationId, organizationName)) return null;
+  return {
+    country,
+    organizationId,
+    organizationName,
+  };
 }
 
 export function invitationRedirectUrl(env: NodeJS.ProcessEnv = process.env): string {
@@ -98,6 +206,34 @@ async function ensureOrganization(
   });
 }
 
+async function ensureAcceptedInvitationMetadata(
+  user: Awaited<ReturnType<typeof clerkClient.users.getUser>>,
+) {
+  if (
+    resolveInvitationAssignment(user.publicMetadata as InvitationMetadata)
+    || resolveOperatorAuthority(
+      user.privateMetadata,
+      (parishId) => PARISHES.some((parish) => parish.id === parishId),
+    )
+  ) return user;
+
+  const primaryEmail = user.emailAddresses.find((address) => address.id === user.primaryEmailAddressId);
+  if (!primaryEmail || primaryEmail.verification?.status !== "verified") return user;
+  const invitationList = await clerkClient.invitations.getInvitationList({ limit: 100 });
+  const invitations = Array.isArray(invitationList)
+    ? invitationList
+    : (invitationList as { data?: InvitationRecord[] }).data ?? [];
+  const metadata = findAcceptedInvitationMetadata(invitations, primaryEmail.emailAddress);
+  if (!metadata) return user;
+
+  return clerkClient.users.updateUserMetadata(user.id, {
+    publicMetadata: {
+      ...user.publicMetadata,
+      ...metadata,
+    },
+  });
+}
+
 export function onboardingStateFromUser(
   user: Awaited<ReturnType<typeof clerkClient.users.getUser>>,
 ) {
@@ -113,7 +249,7 @@ export function onboardingStateFromUser(
 async function onboardingState(req: Request) {
   const { userId } = getAuth(req);
   if (!userId) return { isAuthenticated: false, emailVerified: false, authority: null, profile: null };
-  const user = await clerkClient.users.getUser(userId);
+  const user = await ensureAcceptedInvitationMetadata(await clerkClient.users.getUser(userId));
   return onboardingStateFromUser(user);
 }
 
@@ -127,24 +263,19 @@ router.post("/onboarding", async (req, res): Promise<void> => {
     res.status(401).json({ error: "Sign in through your invitation to continue" });
     return;
   }
-  let user = await clerkClient.users.getUser(userId);
+  let user = await ensureAcceptedInvitationMetadata(await clerkClient.users.getUser(userId));
   const primaryEmail = user.emailAddresses.find((address) => address.id === user.primaryEmailAddressId);
   if (primaryEmail?.verification?.status !== "verified") {
     res.status(403).json({ error: "Verify your invited email address before onboarding" });
     return;
   }
   const invitation = user.publicMetadata as InvitationMetadata;
+  const invitationAssignment = resolveInvitationAssignment(invitation);
   const existingAuthority = resolveOperatorAuthority(
     user.privateMetadata,
     (parishId) => PARISHES.some((parish) => parish.id === parishId),
   );
-  const hasValidInvitation = (
-    invitation.rvpInvitation !== true
-    ? false
-    : typeof invitation.rvpRole === "string"
-      && ROLES.has(invitation.rvpRole)
-      && typeof invitation.rvpOrganizationId === "string"
-  );
+  const hasValidInvitation = invitationAssignment !== null;
   if (!existingAuthority && !hasValidInvitation) {
     res.status(403).json({ error: "This account is not linked to a valid RVP organization invitation" });
     return;
@@ -152,19 +283,23 @@ router.post("/onboarding", async (req, res): Promise<void> => {
   if (existingAuthority) {
     user = await ensureOrganization(user, existingAuthority.role);
   }
-  const assignedRole = existingAuthority?.role ?? text(invitation.rvpRole);
-  const assignedParishId = existingAuthority?.parishId ?? text(invitation.rvpParishId);
+  const assignedRole = existingAuthority?.role ?? invitationAssignment?.role ?? "";
+  const assignedCountryCode = text(user.privateMetadata.rvpCountryCode).toUpperCase()
+    || invitationAssignment?.countryCode
+    || (existingAuthority?.parishId ? "JAM" : "");
+  const assignedParishId = assignedCountryCode === "JAM"
+    ? existingAuthority?.parishId ?? invitationAssignment?.parishId ?? ""
+    : "";
   const organizationId = text(user.privateMetadata.rvpOrganizationId)
-    || text(invitation.rvpOrganizationId);
+    || invitationAssignment?.organizationId
+    || "";
   const organizationName = text(user.privateMetadata.rvpOrganizationName)
-    || text(invitation.rvpOrganizationName);
+    || invitationAssignment?.organizationName
+    || "";
   if (!organizationId) {
     res.status(403).json({ error: "This account is not assigned to an RVP organization" });
     return;
   }
-  const assignedCountryCode = text(user.privateMetadata.rvpCountryCode)
-    || text(invitation.rvpCountryCode)
-    || (assignedParishId ? "JAM" : "");
   if (PARISH_ROLES.has(assignedRole) && assignedCountryCode === "JAM" && !PARISHES.some((parish) => parish.id === assignedParishId)) {
     res.status(400).json({ error: "The invitation is missing a valid parish assignment" });
     return;
@@ -194,7 +329,7 @@ router.post("/onboarding", async (req, res): Promise<void> => {
       rvpOrganizationId: organizationId,
       rvpOrganizationName: organizationName,
       rvpCountryCode: assignedCountryCode || undefined,
-      rvpCountryName: text(user.privateMetadata.rvpCountryName) || text(invitation.rvpCountryName) || undefined,
+      rvpCountryName: text(user.privateMetadata.rvpCountryName) || invitationAssignment?.countryName || undefined,
     },
   });
   res.json(onboardingStateFromUser(updatedUser));
@@ -267,21 +402,12 @@ router.post("/organization/invitations", async (req, res): Promise<void> => {
   const role = text(input.role);
   const parishId = text(input.parishId);
   const requestedCountryCode = text(input.countryCode).toUpperCase();
-  const currentCountryCode = text(current.privateMetadata.rvpCountryCode).toUpperCase()
-    || (text(current.privateMetadata.rvpOrganizationId) === "rvp-jamaica-command" ? "JAM" : "");
-  const country = authority.role === "system_admin"
-    ? COUNTRY_BY_CODE.get(requestedCountryCode)
-    : COUNTRY_BY_CODE.get(currentCountryCode);
-  const organizationId = authority.role === "system_admin" && country
-    ? `rvp-${country.code.toLowerCase()}-command`
-    : text(current.privateMetadata.rvpOrganizationId);
-  const organizationName = authority.role === "system_admin" && country
-    ? `Recovery Velocity Platform ${country.name}`
-    : text(current.privateMetadata.rvpOrganizationName) || "Recovery Velocity Platform";
-  if (!organizationId || !country || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailAddress) || !ROLES.has(role)) {
+  const target = resolveInvitationTarget(authority.role, current.privateMetadata, requestedCountryCode);
+  if (!target || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailAddress) || !ROLES.has(role)) {
     res.status(400).json({ error: "Provide a valid email address and role" });
     return;
   }
+  const { country, organizationId, organizationName } = target;
   if (authority.role === "national_coordinator" && (role === "national_coordinator" || role === "system_admin")) {
     res.status(403).json({ error: "Incident Commanders may invite operational and partner roles only" });
     return;

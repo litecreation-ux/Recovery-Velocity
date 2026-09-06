@@ -13,3 +13,11 @@
 - [AI mutual-aid safety boundary](ai-mutual-aid-safety.md) — Internal approval may create a requested record, but AI-suggested counterparts stay pending until separately verified.
 - [Communications delivery truth](communications-delivery-truth.md) — Offline and fallback messages remain queued/requested until a server or provider explicitly confirms delivery.
 - [Artifact Registry auth on Nix](artifact-registry-auth-nix.md) — Use short-lived access-token login with an isolated Docker config when the gcloud credential helper binary is unavailable.
+- [Clerk invitation API shape](clerk-invitation-api-shape.md) — Treat the external Clerk invitation list as a top-level array; individual invitation lookup may not be available.
+- [External Clerk client state](external-clerk-client-state.md) — Clear both app and Clerk frontend-domain site data when password sign-in reports signed-out despite a healthy account.
+- [Nested flex scrolling](nested-flex-scrolling.md) — Fixed-height nested flex panes need non-shrinking tall content as well as min-h-0 on scroll ancestors.
+- [Authority routing state](authority-routing-state.md) — Derive route-critical roles directly from query data; mirrored effect state can create transient redirect loops.
+- [Cloud Run photo storage](cloud-run-photo-storage.md) — Replit App Storage sidecar credentials do not work on Cloud Run; production photos require native GCS access.
+- [External Clerk redirects](external-clerk-redirects.md) — Force RVP post-auth routes so shared Clerk defaults cannot send operators to another JWMS application.
+- [Production Clerk build key](production-clerk-build-key.md) — Cloud Run images must compile the frontend with the production Clerk key from GCP, never the workspace development key.
+- [Accepted Clerk invitation metadata](accepted-clerk-invitation-metadata.md) — Accepted invitations may retain RVP assignment metadata without copying it to the created user.
