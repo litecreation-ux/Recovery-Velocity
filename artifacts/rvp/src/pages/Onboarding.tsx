@@ -23,9 +23,12 @@ export default function Onboarding() {
   
   const [formData, setFormData] = useState<Partial<OnboardingProfile>>({});
 
-  const { data, isLoading, error } = useQuery<OnboardingResponse>({
+  const { data, isLoading, isFetching, error, refetch } = useQuery<OnboardingResponse>({
     ...onboardingQueryOptions(),
     enabled: isLoaded && isSignedIn,
+    refetchInterval: (query) =>
+      query.state.data?.emailVerified === false ? 5000 : false,
+    refetchOnWindowFocus: true,
   });
 
   const mutation = useMutation({
@@ -100,6 +103,16 @@ export default function Onboarding() {
   }
 
   if (!data.emailVerified) {
+    const refreshVerification = async () => {
+      const result = await refetch();
+      if (result.data?.emailVerified) {
+        toast({
+          title: "Email verified",
+          description: "Your account is verified. You can continue onboarding.",
+        });
+      }
+    };
+
     return (
       <div className="flex min-h-full flex-col items-center justify-center bg-background text-center p-6 space-y-4">
         <ShieldAlert className="w-12 h-12 text-amber-500" />
@@ -107,7 +120,10 @@ export default function Onboarding() {
         <p className="text-muted-foreground text-sm max-w-md">
           Please check your email and follow the link to verify your address before continuing.
         </p>
-        <Button variant="outline" onClick={() => window.location.reload()}>I have verified my email</Button>
+        <Button variant="outline" onClick={refreshVerification} disabled={isFetching}>
+          {isFetching && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          I have verified my email
+        </Button>
       </div>
     );
   }
