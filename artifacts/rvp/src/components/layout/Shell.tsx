@@ -18,13 +18,16 @@ import {
   Globe,
   LogOut,
   UserCircle,
-  Building
-  ,Radio
+  Building,
+  Radio,
+  Compass
 } from "lucide-react";
 import { ReactNode, useEffect, useState } from "react";
+import { PlatformTour } from "@/components/tour/PlatformTour";
 import { cn } from "@/lib/utils";
 import { useClerk } from "@clerk/react";
 import {
+  getGetDashboardSummaryQueryKey,
   getGetCountryRiskOverviewQueryKey,
   getListRiskCountriesQueryKey,
   useGetCountryRiskOverview,
@@ -46,10 +49,11 @@ export default function Shell({ children }: { children: ReactNode }) {
   const [location] = useLocation();
   const { signOut } = useClerk();
   const [time, setTime] = useState(new Date());
+  const [tourRequested, setTourRequested] = useState(false);
   const { role, isAuthorityLoading } = useRole();
   // These might fail if no role, but we can safely call them
   const { data: summary } = useGetDashboardSummary({
-    query: { enabled: role === 'system_admin' },
+    query: { enabled: role === 'system_admin', queryKey: getGetDashboardSummaryQueryKey() },
   });
   const { selectedCountryCode, setSelectedCountryCode } = useCountry();
   const { data: countries, isLoading: countriesLoading } = useListRiskCountries({
@@ -246,6 +250,18 @@ export default function Shell({ children }: { children: ReactNode }) {
               </Link>
             );
           })}
+
+          <div className="mt-4 pt-4 border-t border-border/40">
+            <button
+              onClick={() => setTourRequested(true)}
+              className="flex w-full items-center px-3 py-2.5 rounded-sm transition-colors cursor-pointer group text-muted-foreground hover:bg-muted hover:text-foreground"
+              data-testid="nav-button-tour"
+              title="Platform Guide"
+            >
+              <Compass className="w-4 h-4 md:mr-3 mx-auto md:mx-0 text-muted-foreground group-hover:text-foreground" />
+              <span className="hidden md:block font-medium tracking-wide text-xs uppercase flex-1 text-left">Guide</span>
+            </button>
+          </div>
         </nav>
 
         <div className="hidden md:block border-t border-border bg-muted/10 px-3 py-3">
@@ -321,6 +337,7 @@ export default function Shell({ children }: { children: ReactNode }) {
         <div className="relative z-10 flex min-h-0 flex-1 flex-col min-w-0 overflow-y-auto overscroll-contain touch-pan-y">
           {children}
         </div>
+        <PlatformTour requested={tourRequested} onStart={() => setTourRequested(false)} />
       </main>
     </div>
   );
