@@ -47,8 +47,8 @@ export default function JamaicaMap({ selectedParishId, onSelectParish, parishes 
         style={{ background: 'transparent' }}
       >
         <TileLayer
-          url="https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png"
-          attribution="&copy; OpenStreetMap contributors &copy; CARTO"
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          attribution="&copy; OpenStreetMap contributors"
         />
         <GeoJSON
           key={geoKey}

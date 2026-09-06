@@ -20,7 +20,7 @@ import ForecastPanel from "@/components/dashboard/ForecastPanel";
 import ReportsPanel from "@/components/dashboard/ReportsPanel";
 import ResourceExchangePanel from "@/components/dashboard/ResourceExchangePanel";
 import ParishInfrastructurePanel from "@/components/dashboard/ParishInfrastructurePanel";
-import { Target, SlidersHorizontal } from "lucide-react";
+import { ChevronDown, ChevronRight, Target, SlidersHorizontal } from "lucide-react";
 import { ResilienceScoreCard } from "@/components/dashboard/global/ResilienceScoreCard";
 import { IndicatorsAndHistoryCard } from "@/components/dashboard/global/IndicatorsAndHistoryCard";
 import { BusinessContinuityList } from "@/components/dashboard/global/BusinessContinuityList";
@@ -45,12 +45,13 @@ export default function Dashboard() {
   const [selectedParishId, setSelectedParishId] = useState<string>("kingston");
   const [stormScenario, setStormScenario] = useState<StormScenario>(DEFAULT_STORM_SCENARIO);
   const [isReadinessFocused, setIsReadinessFocused] = useState(false);
+  const [showForecast, setShowForecast] = useState(false);
+  const [showResources, setShowResources] = useState(false);
   const readinessPanelRef = useRef<HTMLDivElement>(null);
   const [showPanelControls, setShowPanelControls] = useState(false);
   const [visiblePanels, setVisiblePanels] = useState({
     preparedness: true,
     history: true,
-    continuity: true,
     localMap: true,
   });
   const { data: parishes } = useListParishes();
@@ -61,9 +62,13 @@ export default function Dashboard() {
   const panelOptions = [
     ["preparedness", "Preparedness capacity"],
     ["history", "Hurricane history"],
-    ["continuity", "Essential services"],
     ["localMap", "Country map & local context"],
   ] as const;
+  const hasContinuityEvidence = continuity?.organizations.some(
+    (organization) =>
+      organization.status !== "unknown" &&
+      organization.confidence !== "unknown",
+  );
   const handleScoreSelect = (scoreKey: ScoreKey) => {
     const shouldFocusReadiness = scoreKey === "readiness" && selectedCountry?.country.hasOperationalUnits;
     setIsReadinessFocused(Boolean(shouldFocusReadiness));
@@ -112,7 +117,7 @@ export default function Dashboard() {
             <div className="order-2 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 shrink-0">
               {visiblePanels.preparedness && <ResilienceScoreCard score={selectedCountry.resilience} />}
               {visiblePanels.history && <IndicatorsAndHistoryCard indicators={selectedCountry.worldBankIndicators} history={selectedCountry.historicalExposure} regionalReference={selectedCountry.regionalReference} />}
-              {visiblePanels.continuity && <div className="md:col-span-2 xl:col-span-1"><BusinessContinuityList directory={continuity} isLoading={continuityLoading} /></div>}
+              {hasContinuityEvidence && <div className="md:col-span-2 xl:col-span-1"><BusinessContinuityList directory={continuity} isLoading={continuityLoading} /></div>}
             </div>
 
             {visiblePanels.localMap && (selectedCountry.country.hasOperationalUnits ? (
@@ -159,8 +164,24 @@ export default function Dashboard() {
                     <div ref={readinessPanelRef}>
                       <ReadinessPanel parishId={selectedParishId} isFocused={isReadinessFocused} />
                     </div>
-                    <ForecastPanel parishId={selectedParishId} stormScenario={stormScenario} />
-                    <ResourceExchangePanel />
+                    <button
+                      type="button"
+                      onClick={() => setShowForecast((value) => !value)}
+                      className="flex w-full items-center justify-between border border-border bg-card/40 px-4 py-3 text-left font-mono text-[10px] uppercase tracking-widest text-muted-foreground hover:border-primary/40 hover:text-primary"
+                    >
+                      Recovery forecast
+                      {showForecast ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                    </button>
+                    {showForecast && <ForecastPanel parishId={selectedParishId} stormScenario={stormScenario} />}
+                    <button
+                      type="button"
+                      onClick={() => setShowResources((value) => !value)}
+                      className="flex w-full items-center justify-between border border-border bg-card/40 px-4 py-3 text-left font-mono text-[10px] uppercase tracking-widest text-muted-foreground hover:border-primary/40 hover:text-primary"
+                    >
+                      Resource declarations
+                      {showResources ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                    </button>
+                    {showResources && <ResourceExchangePanel />}
                     <ReportsPanel parishId={selectedParishId} />
                   </div>
                 </div>

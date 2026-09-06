@@ -5,10 +5,13 @@ import ForecastPanel from "@/components/dashboard/ForecastPanel";
 import ReportsPanel from "@/components/dashboard/ReportsPanel";
 import ResourceExchangePanel from "@/components/dashboard/ResourceExchangePanel";
 import ParishInfrastructurePanel from "@/components/dashboard/ParishInfrastructurePanel";
-import { ShieldAlert, Target } from "lucide-react";
+import { ChevronDown, ChevronRight, ShieldAlert, Target } from "lucide-react";
 import { useRole } from "@/contexts/RoleContext";
+import { useState } from "react";
 
 export default function ParishManagerDashboard() {
+  const [showForecast, setShowForecast] = useState(false);
+  const [showResources, setShowResources] = useState(false);
   const { data: parishes } = useListParishes();
   const { parishId } = useRole();
   const parish = parishes?.find((item) => item.id === parishId);
@@ -84,8 +87,24 @@ export default function ParishManagerDashboard() {
           {/* Panels - 5 Columns */}
           <div className="col-span-12 xl:col-span-5 flex flex-col gap-4 min-h-0 overflow-y-auto pr-1">
             <ReadinessPanel parishId={parishId} />
-            <ForecastPanel parishId={parishId} stormScenario="category_3" />
-            <ResourceExchangePanel />
+            <button
+              type="button"
+              onClick={() => setShowForecast((value) => !value)}
+              className="flex w-full items-center justify-between border border-border bg-card/40 px-4 py-3 text-left font-mono text-[10px] uppercase tracking-widest text-muted-foreground hover:border-primary/40 hover:text-primary"
+            >
+              Recovery forecast
+              {showForecast ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+            </button>
+            {showForecast && <ForecastPanel parishId={parishId} stormScenario="category_3" />}
+            <button
+              type="button"
+              onClick={() => setShowResources((value) => !value)}
+              className="flex w-full items-center justify-between border border-border bg-card/40 px-4 py-3 text-left font-mono text-[10px] uppercase tracking-widest text-muted-foreground hover:border-primary/40 hover:text-primary"
+            >
+              Resource declarations
+              {showResources ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+            </button>
+            {showResources && <ResourceExchangePanel />}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 shrink-0">
               <ReportsPanel parishId={parishId} />
             </div>

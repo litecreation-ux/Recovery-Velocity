@@ -109,8 +109,8 @@ export function CountryFocusMap({
     <div className="h-full min-h-[380px] w-full bg-[#0a0e17] relative">
       <MapContainer center={[country.code === "BHS" ? 24.3 : 18.1, country.code === "BHS" ? -76 : -77.3]} zoom={7} zoomControl={false} className="h-full w-full">
         <TileLayer
-          url="https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png"
-          attribution="&copy; OpenStreetMap contributors &copy; CARTO"
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          attribution="&copy; OpenStreetMap contributors"
         />
         <MapFit country={country} areas={areas} />
         {boundaries && (
